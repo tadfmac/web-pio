@@ -9,7 +9,7 @@
 //
 
 const ROUTER_HEADER_LEN = 8;
-const DEB = true;
+const DEB = false;
 
 class PipelineMIDI{
   constructor(){
