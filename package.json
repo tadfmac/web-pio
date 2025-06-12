@@ -1,0 +1,16 @@
+{
+  "name": "web-pio",
+  "version": "0.0.1",
+  "description": "web-pio physical io for web",
+  "type": "module",
+  "main": "app.mjs",
+  "scripts": {
+    "start": "node ./app.mjs"
+  },
+  "author": "D.F.Mac. @TripArts Music",
+  "license": "MIT",
+  "dependencies": {
+    "@julusian/midi": "^3.6.1",
+    "express": "^4.18.1"
+  }
+}

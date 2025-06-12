@@ -1,0 +1,37 @@
+
+const F = {
+  DEVICE_ACTIVATE:  0x08,
+  GPIO_EXPORT:      0x10,
+  GPIO_WRITE:       0x11,
+  GPIO_READ:        0x12,
+  GPIO_UNEXPORT:    0x13,
+  GPIO_ONCHANGE:    0x14,
+  GPIO_UNEXPORTALL: 0x15,
+  GPIO_SETPWM:      0x16,
+  GPIO_ANALOGREAD:  0x17,
+  I2C_INIT:         0x20,
+  I2C_WRITE8:       0x21,
+  I2C_WRITE16:      0x22,
+  I2C_WRITEBYTE:    0x23,
+  I2C_WRITEBYTES:   0x24,
+  I2C_READ8:        0x25,
+  I2C_READ16:       0x26,
+  I2C_READBYTE:     0x27,
+  I2C_READBYTES:    0x28,
+  I2C_PORTSCAN:     0x29,
+  I2C_ONADDRCLOSE:  0x2A,
+  FUNC_LED_INIT:    0x80,
+  FUNC_LED_ON:      0x81,
+  FUNC_LED_OFF:     0x82,
+  FUNC_CLED_INIT:   0x83,
+  FUNC_CLED_SET:    0x84,
+  FUNC_CLED_OFF:    0x85,
+
+  DIR_OUT:1,
+  DIR_IN:2,
+  DIR_INPULLUP:3,
+  DIR_PWM:4,
+  DIR_ADC:5
+};
+
+export default F;
