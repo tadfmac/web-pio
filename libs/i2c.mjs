@@ -51,14 +51,16 @@ class I2CAccess{
   }
 }
 
-class I2CPort{
+class I2CPort extends EventTarget{
   constructor(portNumber,conf){
+    super();
     if(DEB) console.log("I2CPort.constructor() port="+portNumber);
     if(DEB) console.dir(conf);
     this.portNumber = portNumber;
     this.conf = conf;
     this.isActive = true;
     this.i2cDevices = {};
+    this.onclose = null;
   }
   _suspend(){
     if(DEB) console.log("I2CPort._suspend() port="+this.portNumber);
@@ -76,7 +78,7 @@ class I2CPort{
   }
   async open(_address){
     let address = ""+_address;
-    this.i2cDevices[address] = new I2CSlaveDevice(this.portNumber,address,this.conf,this._slaveClosed);
+    this.i2cDevices[address] = new I2CSlaveDevice(this.portNumber,address,this.conf,this._slaveClosed.bind(this));
     return await this.i2cDevices[address].init();
   }
   detect(){
@@ -110,13 +112,19 @@ class I2CPort{
       }
     });
   }
-  _slaveClosed(address){
+  _slaveClosed(ev){
+    console.log("I2CPort._slaveClosed() portNumer="+ev.portNumber+" address="+ev.address);
     // experimental。そもそも slavedeviceのcloseを考慮する必要があるのか?
     // closeだけでなくdevice側のonready も検出できないと close後の openのタイミングが
     // ないのでは? という問題はある。
     // 一旦、現在はcloseだけ実装。
     // 
     // 呼びだし元インスタンスを消すのを防ぐためコンテキストを分ける
+    if(this.onclose != null){
+      this.onclose(ev);
+    }
+    this.dispatchEvent(ev);
+    const address = ev.address;
     setTimeout((address)=>{
       console.log("I2CPort._slaveClosed() delete i2cSlaveDevice instance. addr="+address);
       this.i2cDevices[address];
@@ -124,8 +132,9 @@ class I2CPort{
   }
 }
 
-class I2CSlaveDevice{
+class I2CSlaveDevice extends EventTarget{
   constructor(portNumber,address,conf,closeCallback){
+    super();
     this.portNumber = portNumber;
     this.address = address;
     this.conf = conf;
@@ -146,7 +155,7 @@ class I2CSlaveDevice{
         if(result[0] == 1){
           this.isActive = true;
           let port = (this.portNumber == 1)? 0x80&this.address : this.address; // i2c port が 0 or 1 の前提
-          plmidi.registerAddrClose(this.conf.name,F.I2C_ONADDRCLOSE,this.portNumber,this.address,this._onClose);
+          plmidi.registerAddrClose(this.conf.name,F.I2C_ONADDRCLOSE,this.portNumber,this.address,this._onClose.bind(this));
           resolve(this);
         }else{
           console.error("I2CSlaveDevice.init() error received."); // [0]:status [1]:result
@@ -159,12 +168,14 @@ class I2CSlaveDevice{
   _onClose(){
     if(DEB) console.log("I2CSlaveDevice._onClose() port="+this.portNumber+" address="+this.address+" device="+this.conf.name);
     this.isActive = false;
+    const ev = new I2CCloseEvent("close",this.portNumber,this.address);
 //    1度しか呼ばれないので、呼ぶ側で queue から登録消してしまえばよかろう。
 //    plmidi.removeAddrClose(this.conf.name,I2C_ONADDRCLOSE,this.portNumber,this.address);
     if(this.onclose != null){
-      this.onclose();
+      this.onclose(ev);
     }
-    this.closeCallback(this.address);
+    this.dispatchEvent(ev);
+    this.closeCallback(ev);
   }
   read8(register){
     return new Promise(async (resolve)=>{
@@ -380,6 +391,14 @@ class I2CSlaveDevice{
         }
       }
     });
+  }
+}
+
+class I2CCloseEvent extends Event{
+  constructor(type,portNumber,address){
+    super(type);
+    this.portNumber = portNumber;
+    this.address = address;
   }
 }
 

@@ -72,7 +72,7 @@ void checkI2cSlaveStatus(){
       result = Wire.endTransmission();
       if(result != 0){
         sendI2COnAddrClose(0,cnt);
-        i2cSlaveStatus0[cnt] == 0;
+        i2cSlaveStatus0[cnt] = 0;
       }
     }
 #ifdef WIRE1_ENABLE
@@ -81,7 +81,7 @@ void checkI2cSlaveStatus(){
       result = Wire1.endTransmission();
       if(result != 0){
         sendI2COnAddrClose(1,cnt);
-        i2cSlaveStatus1[cnt] == 0;
+        i2cSlaveStatus1[cnt] = 0;
       }
     }
 #endif
@@ -602,7 +602,7 @@ void sendI2COnAddrClose(uint8_t port, uint8_t addr){
   rawOutputData[8] = port;
   rawOutputData[9] = addr;
   
-  uint16_t sendLen = encodeToMidiSysEx(rawOutputData,6,sysExOutData,sizeof(sysExOutData));
+  uint16_t sendLen = encodeToMidiSysEx(rawOutputData,10,sysExOutData,sizeof(sysExOutData));
 
 #ifdef DEB
   SerialTinyUSB.print("sendI2COnAddrClose: ");

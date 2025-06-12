@@ -9,7 +9,7 @@
 //
 
 const ROUTER_HEADER_LEN = 8;
-const DEB = false;
+const DEB = true;
 
 class PipelineMIDI{
   constructor(){
@@ -125,6 +125,7 @@ class PipelineMIDI{
           }
         }
       }else if(mode == 3){
+//console.log("mode=3");
         // [0] Address Close (3)
         // [1] function id (0x2A)
         // [2] session id LSB (0)

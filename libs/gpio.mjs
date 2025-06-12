@@ -16,9 +16,10 @@ const c = devList.getConst();
 
 const DEB = false;
 
-class GPIOAccess{
+class GPIOAccess extends EventTarget{
   constructor(){
     if(DEB) console.log("GPIOAccess.constructor()");
+    super();
     this.ports = new Map();
     this.onchange = null;
     this.config = null;
@@ -87,11 +88,13 @@ class GPIOAccess{
     if(this.onchange != null){
       this.onchange(ev);
     }
+    this.dispatchEvent(ev);
   }
 }
 
 class GPIOPort extends EventTarget{
   constructor(portNumber, conf, onchangeAccess){
+    super();
     if(DEB) console.log("GPIOPort.constructor() port="+portNumber);
     if(DEB) console.dir(conf);
     this.conf = conf;
@@ -341,11 +344,22 @@ class GPIOPort extends EventTarget{
   }
   _onChangeEvent(onOff){
     if(DEB) console.log("GPIOPort._onChangeEvent() portNumber="+this.portNumber+"+onOff="+onOff);
-    if(this.onchange != null){
-      const ev = {port:this, value:onOff};
+    const ev = new GPIOChangeEvent("change",this, onOff);
+    if(this.onchangeAccess != null){
       this.onchangeAccess(ev);
+    }
+    if(this.onchange != null){
       this.onchange(ev);
     }
+    this.dispatchEvent(ev);
+  }
+}
+
+class GPIOChangeEvent extends Event{
+  constructor(type,port,value){
+    super(type);
+    this.port = port;
+    this.value = value;
   }
 }
 

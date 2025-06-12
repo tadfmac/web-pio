@@ -1,5 +1,5 @@
 // web-pio example
-// input-button.mjs
+// input.mjs
 // ©2025 by D.F.Mac. @TripArts Music
 
 import Pio from "../../../libs/pio.mjs";
