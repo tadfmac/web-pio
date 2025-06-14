@@ -60,6 +60,12 @@ The differences from the Web I2C API draft specification are as follows:
 
 ## Support Devices
 
+In web-pio, to prevent conflicts between GPIO and I2C, pins used for I2C are excluded from the list of ports that can be exported by the Web GPIO API.    
+
+Please note that the port numbers used by the Web I2C API are logical. They may differ from the numbers listed in the datasheet.    
+
+See the diagram below for details.    
+
 ### [Seeed Studio XIAO RP2040](https://wiki.seeedstudio.com/XIAO-RP2040/)
 
 ![xiao-rp2040](imgs/pop-xiao-rp2040-ports.png)
