@@ -1,6 +1,6 @@
 # web-pio
 
-![web-pio logo](./imgs/tree/main/web-pio.png)
+![web-pio logo](./tree/main/imgs/web-pio.png)
 
 ## Overview
 
@@ -63,7 +63,7 @@ The differences from the Web I2C API draft specification are as follows:
 ### [Seeed Studio XIAO RP2040](https://wiki.seeedstudio.com/XIAO-RP2040/)
 
 ### [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)
-![raspi-pico](./imgs/tree/main/pio-raspi-pico-ports.png)
+![raspi-pico](./tree/main/imgs/pio-raspi-pico-ports.png)
 
 ## Usage
 
