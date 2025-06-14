@@ -95,9 +95,7 @@ node ./examples/js/gpio/blink.mjs
 
 ## License
 
-MIT, However, the files in the following folders are copies of works from [CHIRIMEN Open Hardware/chirimen-drivers](https://github.com/chirimen-oh/chirimen-drivers). For details, please see the [CHIRIMEN Open Hardware website](https://github.com/chirimen-oh).
-
-`deps/drivers`
+[MIT](LICENSE)
 
 
 
