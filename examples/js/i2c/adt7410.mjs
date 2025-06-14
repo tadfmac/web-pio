@@ -21,7 +21,7 @@ async function onFound(devices){ // devices =　List of devices recently connect
   isI2cSlaveDeviceActive = true;
   while(isI2cSlaveDeviceActive && devices[0].isActive){
     let temperature = await adt7410.read();
-//    console.log("temperature="+temperature);
+    console.log("temperature="+temperature);
     pio.wait(500);
   }
 }

@@ -189,7 +189,8 @@ class Pio{
       if(Object.keys(this.targetPrefixes).length > 0){
         for(let cnt=0;cnt<leaveDevices.length;cnt++){
           for(let prefix in this.targetPrefixes){
-            if(leaveDevices[cnt].startsWith(prefix)){
+            let name = leaveDevices[cnt].split("-")[0];
+            if(name == prefix){
               devices.push(this.devices[leaveDevices[cnt]]);
               break;
             }
@@ -220,7 +221,8 @@ class Pio{
         if(Object.keys(this.targetPrefixes).length > 0){
           for(let cnt=0;cnt<foundDevices.length;cnt++){
             for(let prefix in this.targetPrefixes){
-              if(foundDevices[cnt].startsWith(prefix)){
+              let name = foundDevices[cnt].split("-")[0];
+              if(name == prefix){
                 devices.push(this.devices[foundDevices[cnt]]);
                 break;
               }

@@ -52,8 +52,25 @@ const supportedDevices = {
       voltage:3.3,
       reference:"https://www.raspberrypi.com/products/raspberry-pi-pico/"
     }
+  },
+  pio_RaspiPico2:{
+    type:DEF.DEVICE_TYPE_MIDI,
+    gpioPorts:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,18,19,20,21,22,26,27,28],
+    defaultGpioPort:0,
+    pinNames:["P1","P1","P4","P5","P6","P7","P9","P10","P11","P12","P14","P15","P16","P17","P24","P25","P26","P27","P29","P31","P32","P34"],
+    adcPorts:[26,27,28],
+    defaultAdcPort:26,
+    i2cPorts:[0,1],
+    defaultI2cPort:0,
+    leds:{
+      default:{type:DEF.LED_TYPE_MONO},  // User LED (D25)
+      0:{type:DEF.LED_TYPE_MONO} // User LED (D25)
+    },
+    info:{
+      voltage:3.3,
+      reference:"https://www.raspberrypi.com/products/raspberry-pi-pico-2/"
+    }
   }
-
 };
 
 class SupportDevices{
