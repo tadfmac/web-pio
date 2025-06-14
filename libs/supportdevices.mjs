@@ -26,13 +26,32 @@ const supportedDevices = {
     i2cPorts:[0],
     defaultI2cPort:0,
     leds:{
-      default:{type:DEF.LED_TYPE_RGB},  // NEOPIXEL (0)
-      0:{type:DEF.LED_TYPE_RGB}, // NEOPIXEL (0)
-      1:{type:DEF.LED_TYPE_RGB}  // RGB LED (1)
+      default:{type:DEF.LED_TYPE_RGB},  // RGB LED (0)
+      0:{type:DEF.LED_TYPE_RGB}, // RGB LED (0)
+      1:{type:DEF.LED_TYPE_RGB}  // NEOPIXEL (1)
     },
     info:{
       voltage:3.3,
       reference:"https://wiki.seeedstudio.com/XIAO-RP2040/"
+    }
+  },
+  pio_xiaoRP2350:{
+    type:DEF.DEVICE_TYPE_MIDI,
+    gpioPorts:[26,27,28,5,0,1,2,4,3],
+    defaultGpioPort:0,
+    pinNames:["D0","D1","D2","D3","D6","D7","D8","D9","D10"],
+    adcPorts:[26,27,28],
+    defaultAdcPort:26,
+    i2cPorts:[0],
+    defaultI2cPort:0,
+    leds:{
+      default:{type:DEF.LED_TYPE_MONO},  // UserLED (0)
+      0:{type:DEF.LED_TYPE_MONO}, // UserLED (0)
+      1:{type:DEF.LED_TYPE_RGB}  // NEOPIXEL (1)
+    },
+    info:{
+      voltage:3.3,
+      reference:"https://wiki.seeedstudio.com/getting-started-xiao-rp2350/"
     }
   },
   pio_RaspiPico:{
