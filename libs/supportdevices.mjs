@@ -42,8 +42,8 @@ const supportedDevices = {
     pinNames:["D0","D1","D2","D3","D6","D7","D8","D9","D10"],
     adcPorts:[26,27,28],
     defaultAdcPort:26,
-    i2cPorts:[0],
-    defaultI2cPort:0,
+    i2cPorts:[1],
+    defaultI2cPort:1,
     leds:{
       default:{type:DEF.LED_TYPE_MONO},  // UserLED (0)
       0:{type:DEF.LED_TYPE_MONO}, // UserLED (0)

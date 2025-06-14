@@ -11,8 +11,6 @@
 */
 extern "C" void flash_get_unique_id(uint8_t *p);
 
-#define DEB true
-
 #include <Adafruit_TinyUSB.h>
 #include <MIDI.h>
 #include <Wire.h>

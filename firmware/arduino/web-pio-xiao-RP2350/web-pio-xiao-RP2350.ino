@@ -11,8 +11,6 @@
 */
 extern "C" void flash_get_unique_id(uint8_t *p);
 
-#define DEB true
-
 #include <Adafruit_TinyUSB.h>
 #include <Adafruit_NeoPixel.h>
 #include <MIDI.h>
@@ -88,6 +86,10 @@ void setup() {
 //  while( !TinyUSBDevice.mounted() ) delay(1);
   delay(500);
 
+  Wire.setSDA(SDA);
+  Wire.setSCL(SCL);
+  Wire.begin();
+  
   Wire1.setSDA(PIN_WIRE1_SDA);
   Wire1.setSCL(PIN_WIRE1_SCL);
   Wire1.begin();

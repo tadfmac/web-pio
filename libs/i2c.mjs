@@ -193,6 +193,7 @@ class I2CSlaveDevice extends EventTarget{
         return;
       }else{
         if(result[0] > 0){
+          if(DEB) console.log("I2CSlaveDevice.read8() res[0]="+result[0]+" res[1]="+result[1]);
           resolve(result[1]);
           return;
         }else{
@@ -219,6 +220,7 @@ class I2CSlaveDevice extends EventTarget{
         return;
       }else{
         if(result[0] > 0){
+          if(DEB) console.log("I2CSlaveDevice.read16() res[0]="+result[0]+" res[1]="+result[1]+"res[2]="+result[2]);
           let wordData = (result[1] | (result[2] << 8));
           resolve(wordData);
           return;
@@ -246,6 +248,7 @@ class I2CSlaveDevice extends EventTarget{
         return;
       }else{
         if(result[0] == 1){
+          if(DEB) console.log("I2CSlaveDevice.write8() OK");
           resolve(result[1]); // result[1] = 1 
           return;
         }else{
@@ -274,6 +277,7 @@ class I2CSlaveDevice extends EventTarget{
         return;
       }else{
         if(result[0] == 1){
+          if(DEB) console.log("I2CSlaveDevice.write16() OK");
           resolve(result[1]); // result[1] = 2
           return;
         }else{
@@ -300,6 +304,7 @@ class I2CSlaveDevice extends EventTarget{
         return;
       }else{
         if(result[0] > 0){
+          if(DEB) console.log("I2CSlaveDevice.readByte() res[0]="+result[0]+" res[1]="+result[1]);
           resolve(result[1]);
           return;
         }else{
@@ -325,12 +330,14 @@ class I2CSlaveDevice extends EventTarget{
         resolve(null);
         return;
       }else{
-        if((result[0] > 0)&&(result[0] == length)){
+        if((result[0] == 1)&&(result[1] == length)){
+          if(DEB) console.log("I2CSlaveDevice.readBytes() res[0]="+result[0]+" length="+result[1]);
+          result.shift();
           result.shift();
           resolve(result);
           return;
         }else{
-          console.error("I2CSlaveDevice.readBytes() error received. size="+result[0]); // [0]:status [1]:result
+          console.error("I2CSlaveDevice.readBytes() error received. res="+result[0]); // [0]:status [1]:result
           resolve(null);
           return;
         }

@@ -13,9 +13,7 @@ uint8_t i2cDetBuf[128];
 uint8_t nextCheckIdx = 0;
 uint16_t sessionId = 0; // for onGpioOnChange Event
 
-#ifndef WIRE_SWAP
 uint8_t i2cSlaveStatus0[128];
-#endif
 #ifdef WIRE1_ENABLE
 uint8_t i2cSlaveStatus1[128];
 #endif
@@ -46,12 +44,12 @@ void checkInput(){
 }
 
 void initI2CSlaveStatus(){
-#ifndef WIRE_SWAP
+  SerialTinyUSB.println("initI2CSlaveStatus");
   for(int cnt=0;cnt<128;cnt++){
     i2cSlaveStatus0[cnt] = 0;
   }
-#endif
 #ifdef WIRE1_ENABLE
+  SerialTinyUSB.println("WIRE1_ENABLE");
   for(int cnt=0;cnt<128;cnt++){
     i2cSlaveStatus1[cnt] = 0;
   }
@@ -71,7 +69,6 @@ void checkI2cSlaveStatus(){
     if((cnt<3)||(cnt>=0x77)){
       continue; // out of i2c Address ranges
     }
-#ifndef WIRE_SWAP
     if(i2cSlaveStatus0[cnt] == 1){
       Wire.beginTransmission(cnt);
       result = Wire.endTransmission();
@@ -80,17 +77,12 @@ void checkI2cSlaveStatus(){
         i2cSlaveStatus0[cnt] = 0;
       }
     }
-#endif
 #ifdef WIRE1_ENABLE
     if(i2cSlaveStatus1[cnt] == 1){
       Wire1.beginTransmission(cnt);
       result = Wire1.endTransmission();
       if(result != 0){
-#ifdef WIRE_SWAP
-        sendI2COnAddrClose(0,cnt);
-#else
         sendI2COnAddrClose(1,cnt);
-#endif
         i2cSlaveStatus1[cnt] = 0;
       }
     }
@@ -375,7 +367,7 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
       res = i2cDeviceReadBytes(pMes[MES_B_IDX+1],pMes[MES_B_IDX+2],pMes[MES_B_IDX+3],&rawOutputData[MES_B_IDX+2]);
       rawOutputData[MES_B_IDX+1] = res;
       if(res == 1){
-        _size = (MES_H_SIZE+1)+pMes[MES_B_IDX+2];
+        _size = (MES_H_SIZE+2)+pMes[MES_B_IDX+2];
       }else{
         _size = MES_H_SIZE+1;
       }
@@ -386,8 +378,10 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
 #endif
       if(pMes[MES_B_IDX+1] == 1){
 #ifdef WIRE1_ENABLE
+SerialTinyUSB.println("I2C_PORTSCAN WIRE1_ENABLE");
         rawOutputData[MES_B_IDX+1] = 1; // ok;
 #else
+SerialTinyUSB.println("I2C_PORTSCAN PORT=1 ERRPR");
         rawOutputData[MES_B_IDX+1] = 0; // error;
 #endif        
       }else if(pMes[MES_B_IDX+1] == 0){
@@ -396,7 +390,10 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
         rawOutputData[MES_B_IDX+1] = 0; // error;
       }
       if(rawOutputData[MES_B_IDX+1] == 1){
-        res = i2cDetectDevices(pMes[4],i2cDetBuf);
+SerialTinyUSB.print("I2C_PORTSCAN TRY RES=");
+        res = i2cDetectDevices(pMes[MES_B_IDX+1],i2cDetBuf);
+SerialTinyUSB.print(res);
+SerialTinyUSB.println();
         rawOutputData[MES_B_IDX+2] = res;
         for(int cnt=0;cnt<res;cnt++){
           rawOutputData[(MES_B_IDX+3)+cnt] = i2cDetBuf[cnt];
@@ -635,11 +632,7 @@ uint8_t i2cDetectDevices(uint8_t portNum, uint8_t *pDetectBuf){
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -668,7 +661,6 @@ uint8_t i2cDeviceInit(uint8_t portNum, uint8_t address){
   if(portNum > 1){
     return 0;
   }
-#ifndef WIRE_SWAP
   if(portNum == 1){
     pWire = &Wire1;
     pStatus = i2cSlaveStatus1;
@@ -676,11 +668,6 @@ uint8_t i2cDeviceInit(uint8_t portNum, uint8_t address){
     pWire = &Wire;
     pStatus = i2cSlaveStatus0;
   }
-#else
-  pWire = &Wire1;
-  pStatus = i2cSlaveStatus1;
-#endif
-
 #else
   if(portNum > 0){
     return 0;
@@ -712,11 +699,7 @@ uint8_t i2cDeviceRead8(uint8_t portNum, uint8_t address, uint8_t reg, uint8_t *p
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -729,7 +712,7 @@ uint8_t i2cDeviceRead8(uint8_t portNum, uint8_t address, uint8_t reg, uint8_t *p
   pWire->requestFrom(address, (uint8_t)1);
   uint8_t readSize = pWire->available();
   if(readSize == 1){
-    *pOut = Wire.read();
+    *pOut = pWire->read();
     i2cLock = 0;
     return 1;
   }else{
@@ -749,11 +732,7 @@ uint8_t i2cDeviceRead16(uint8_t portNum, uint8_t address, uint8_t reg, uint16_t 
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -787,11 +766,7 @@ uint8_t i2cDeviceReadByte(uint8_t portNum, uint8_t address, uint8_t *pOut){
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -821,11 +796,7 @@ uint8_t i2cDeviceReadBytes(uint8_t portNum, uint8_t address, uint8_t size, uint8
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -835,6 +806,8 @@ uint8_t i2cDeviceReadBytes(uint8_t portNum, uint8_t address, uint8_t size, uint8
   pWire->requestFrom(address, (uint8_t)size);
   int readSize = pWire->available();
   if(size == readSize){
+    *pOut = size;
+    pOut++;
     for(int cnt=0;cnt<readSize;cnt++){
       *(pOut + cnt) = pWire->read();
     }
@@ -856,11 +829,7 @@ uint8_t i2cDeviceWrite8(uint8_t portNum, uint8_t address, uint8_t reg, uint8_t d
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -886,11 +855,7 @@ uint8_t i2cDeviceWrite16(uint8_t portNum, uint8_t address, uint8_t reg, uint16_t
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -919,11 +884,7 @@ uint8_t i2cDeviceWriteByte(uint8_t portNum, uint8_t address, uint8_t data){
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;
@@ -948,11 +909,7 @@ uint8_t i2cDeviceWriteBytes(uint8_t portNum, uint8_t address, uint8_t length, ui
   if(portNum == 1){
     pWire = &Wire1;
   }else{
-#ifndef WIRE_SWAP
     pWire = &Wire;
-#else
-    pWire = &Wire1;
-#endif
   }
 #else
   pWire = &Wire;

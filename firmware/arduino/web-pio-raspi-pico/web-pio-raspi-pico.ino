@@ -11,8 +11,6 @@
 */
 extern "C" void flash_get_unique_id(uint8_t *p);
 
-#define DEB true
-
 #include <Adafruit_TinyUSB.h>
 #include <MIDI.h>
 #include <Wire.h>
@@ -76,7 +74,7 @@ void setup() {
   MIDI.turnThruOff();
 
 //  while( !TinyUSBDevice.mounted() ) delay(1);
-  delay(500);
+  delay(1000);
 
   Wire.setSDA(16);
   Wire.setSCL(17);
@@ -101,7 +99,6 @@ void setup() {
 
   initI2CSlaveStatus();
   digitalWrite(LED_PIN, LOW);
-
 }
 
 void loop() {

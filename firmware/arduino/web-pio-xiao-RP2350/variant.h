@@ -7,6 +7,6 @@
 
 #define INPUT_CHECK_INTERVAL 8
 
-#define WIRE1_ENABLE true
+#define WIRE1_ENABLE 1
 
 #endif  // _VARIANT_H_

@@ -9,11 +9,10 @@ let pio = new Pio();
 pio.setOnFound(onFound);
 await pio.init();
 
-const portNum = 0;
-
 async function onFound(devices){ // devices =　List of devices recently connected.
   console.log("device found : "+devices[0].name);
-  let port = devices[0].i2cAccess.ports.get(portNum);
+  const defaultPort = devices[0].conf.getDefaultI2CPort();
+  const port = devices[0].i2cAccess.ports.get(defaultPort);
   const vl53l0x = new VL53l0X(port,0x29);
   await vl53l0x.init();
   while(devices[0].isActive){
