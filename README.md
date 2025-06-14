@@ -74,6 +74,10 @@ See the diagram below for details.
 
 ![raspi-pico](imgs/pio-raspi-pico-ports.png)
 
+### [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/)
+
+![raspi-pico](imgs/pio-raspi-pico2-ports.png)
+
 ## Usage
 
 ### Install dependencies and start example server

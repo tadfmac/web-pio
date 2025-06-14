@@ -13,6 +13,8 @@
 #include "midisettings.h"
 #include "variant.h"
 
+//#define DEB 1
+
 #define DEVICE_INIT      0x08  // (func)  null
 #define GPIO_EXPORT      0x10  // (func)  [4]portNumber [5]direction
 #define GPIO_WRITE       0x11  // (func)  [4]portNumber [5]value

@@ -1,22 +1,17 @@
 /*
 
- web-pio-xiao-RP2040 device firmware
+ web-pio-raspi-pico 2 device firmware
   
  ©2025 by D.F.Mac.@TripArts Music
  
  ver. history
  
- - 2025/05/21 : start develop
- - 2025/06/03 : Supports basic functions of https://browserobo.github.io/WebGPIO/
- - 2025/06/03 : Support 8bit PWM
- - 2025/06/04 : Support ADC
- - 2025/06/05 : The PIO common functions have been removed from this file and moved to external files.
+ - 2025/06/14 : first release
 
 */
 extern "C" void flash_get_unique_id(uint8_t *p);
 
 #include <Adafruit_TinyUSB.h>
-#include <Adafruit_NeoPixel.h>
 #include <MIDI.h>
 #include <Wire.h>
 #include "makeUUID.h"
@@ -27,24 +22,7 @@ Adafruit_USBD_MIDI usb_midi;
 
 MIDI_CREATE_CUSTOM_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDI, MySettings);
 
-#define NEOPIX_POW 11
-#define NEOPIX_PIN 12
-
-// XIAO RGB LEDs
-#define RED_LED 17
-#define GREEN_LED 16
-#define BLUE_LED 25
-
-void xiaoRGBLedOff(){
-  pinMode(RED_LED,OUTPUT);
-  pinMode(GREEN_LED,OUTPUT);
-  pinMode(BLUE_LED,OUTPUT);
-  digitalWrite(RED_LED,HIGH);
-  digitalWrite(GREEN_LED,HIGH);
-  digitalWrite(BLUE_LED,HIGH);  
-}
-
-Adafruit_NeoPixel pixels(1, NEOPIX_PIN);
+#define LED_PIN 25
 
 char prdDescStr[30];
 
@@ -57,26 +35,26 @@ void makePrdDescStr(){
   prdDescStr[1] = 'i';
   prdDescStr[2] = 'o';
   prdDescStr[3] = '_';
-  prdDescStr[4] = 'x';
-  prdDescStr[5] = 'i';
-  prdDescStr[6] = 'a';
-  prdDescStr[7] = 'o';
-  prdDescStr[8] = 'R';
+  prdDescStr[4] = 'R';
+  prdDescStr[5] = 'a';
+  prdDescStr[6] = 's';
+  prdDescStr[7] = 'p';
+  prdDescStr[8] = 'i';
   prdDescStr[9] = 'P';
-  prdDescStr[10] = '2';
-  prdDescStr[11] = '0';
-  prdDescStr[12] = '4';
-  prdDescStr[13] = '0';
+  prdDescStr[10] = 'i';
+  prdDescStr[11] = 'c';
+  prdDescStr[12] = 'o';
+  prdDescStr[13] = '2';
   prdDescStr[14] = '-';
   prdDescStr[27] = 0;
   convert8bitToAscii(uuid,&(prdDescStr[15]));
-  // prdDescStr[16] ++; // For patching when duplicate uuids are obtained
+  // prdDescStr[14] ++; // For patching when duplicate uuids are obtained
 }
 
-uint8_t pinNumbers[] = {26,27,28,29, 0, 1, 2, 4, 3};
-uint8_t pinStatus[]  = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t pinCounter[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int     pinOnOff[]   = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+uint8_t pinNumbers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,18,19,20,21,22,26,27,28};
+uint8_t pinStatus[]  = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t pinCounter[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int     pinOnOff[]   = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 uint8_t pinNums = sizeof(pinStatus);
 
 void setup() {
@@ -89,21 +67,23 @@ void setup() {
   USBDevice.setSerialDescriptor((const char *)&(prdDescStr[12]));
   USBDevice.setID(0x1209,0xDF03);
   
-  xiaoRGBLedOff();
-
-  pinMode(NEOPIX_POW, OUTPUT);
-  digitalWrite(NEOPIX_POW, HIGH);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
 
   SerialTinyUSB.begin(115200);
   MIDI.begin(MIDI_CHANNEL_OMNI);
   MIDI.turnThruOff();
 
-  while( !TinyUSBDevice.mounted() ) delay(1);
+//  while( !TinyUSBDevice.mounted() ) delay(1);
   delay(500);
 
-  Wire.setSDA(SDA);
-  Wire.setSCL(SCL);
+  Wire.setSDA(16);
+  Wire.setSCL(17);
   Wire.begin();
+
+  Wire1.setSDA(14);
+  Wire1.setSCL(15);
+  Wire1.begin();  
 
   // なんか電源ON時にMIDI in bufferにデータ入っててcallback呼ばれるので吐き出す
   int cnt;
@@ -119,6 +99,8 @@ void setup() {
   SerialTinyUSB.println(prdDescStr);
 
   initI2CSlaveStatus();
+  digitalWrite(LED_PIN, LOW);
+
 }
 
 void loop() {

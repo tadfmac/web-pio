@@ -7,12 +7,11 @@ let pio = new Pio();
 pio.setOnFound(onFound);
 await pio.init();
 
-const portNum = 0;
-
 async function onFound(devices){ // devices =　List of devices recently connected.
   console.log("device found : "+devices[0].name);
-  let port = devices[0].i2cAccess.ports.get(portNum);
-  let list = await port.detect();
+  const defaultPort = devices[0].conf.getDefaultI2CPort();
+  const port = devices[0].i2cAccess.ports.get(defaultPort);
+  const list = await port.detect();
   let view = "";
   for(let cnt=0;cnt<list.length;cnt++){
   	if(cnt != 0){

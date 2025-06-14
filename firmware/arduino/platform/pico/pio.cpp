@@ -44,10 +44,12 @@ void checkInput(){
 }
 
 void initI2CSlaveStatus(){
+  SerialTinyUSB.println("initI2CSlaveStatus");
   for(int cnt=0;cnt<128;cnt++){
     i2cSlaveStatus0[cnt] = 0;
   }
 #ifdef WIRE1_ENABLE
+  SerialTinyUSB.println("WIRE1_ENABLE");
   for(int cnt=0;cnt<128;cnt++){
     i2cSlaveStatus1[cnt] = 0;
   }
@@ -365,7 +367,7 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
       res = i2cDeviceReadBytes(pMes[MES_B_IDX+1],pMes[MES_B_IDX+2],pMes[MES_B_IDX+3],&rawOutputData[MES_B_IDX+2]);
       rawOutputData[MES_B_IDX+1] = res;
       if(res == 1){
-        _size = (MES_H_SIZE+1)+pMes[MES_B_IDX+2];
+        _size = (MES_H_SIZE+2)+pMes[MES_B_IDX+2];
       }else{
         _size = MES_H_SIZE+1;
       }
@@ -376,8 +378,10 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
 #endif
       if(pMes[MES_B_IDX+1] == 1){
 #ifdef WIRE1_ENABLE
+SerialTinyUSB.println("I2C_PORTSCAN WIRE1_ENABLE");
         rawOutputData[MES_B_IDX+1] = 1; // ok;
 #else
+SerialTinyUSB.println("I2C_PORTSCAN PORT=1 ERRPR");
         rawOutputData[MES_B_IDX+1] = 0; // error;
 #endif        
       }else if(pMes[MES_B_IDX+1] == 0){
@@ -386,7 +390,10 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
         rawOutputData[MES_B_IDX+1] = 0; // error;
       }
       if(rawOutputData[MES_B_IDX+1] == 1){
-        res = i2cDetectDevices(pMes[4],i2cDetBuf);
+SerialTinyUSB.print("I2C_PORTSCAN TRY RES=");
+        res = i2cDetectDevices(pMes[MES_B_IDX+1],i2cDetBuf);
+SerialTinyUSB.print(res);
+SerialTinyUSB.println();
         rawOutputData[MES_B_IDX+2] = res;
         for(int cnt=0;cnt<res;cnt++){
           rawOutputData[(MES_B_IDX+3)+cnt] = i2cDetBuf[cnt];
@@ -705,7 +712,7 @@ uint8_t i2cDeviceRead8(uint8_t portNum, uint8_t address, uint8_t reg, uint8_t *p
   pWire->requestFrom(address, (uint8_t)1);
   uint8_t readSize = pWire->available();
   if(readSize == 1){
-    *pOut = Wire.read();
+    *pOut = pWire->read();
     i2cLock = 0;
     return 1;
   }else{
@@ -799,6 +806,8 @@ uint8_t i2cDeviceReadBytes(uint8_t portNum, uint8_t address, uint8_t size, uint8
   pWire->requestFrom(address, (uint8_t)size);
   int readSize = pWire->available();
   if(size == readSize){
+    *pOut = size;
+    pOut++;
     for(int cnt=0;cnt<readSize;cnt++){
       *(pOut + cnt) = pWire->read();
     }
