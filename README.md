@@ -1,6 +1,6 @@
 # web-pio
 
-![web-pio logo](imgs/web-pio.png)
+![web-pio logo](imgs/web-pio-logo.png)
 
 ## Overview
 
