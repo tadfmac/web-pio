@@ -70,6 +70,10 @@ See the diagram below for details.
 
 ![xiao-rp2040](imgs/pop-xiao-rp2040-ports.png)
 
+### [Seeed Studio XIAO RP2350](https://wiki.seeedstudio.com/getting-started-xiao-rp2350/)
+
+![xiao-rp2350](imgs/pop-xiao-rp2350-ports.png)
+
 ### [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)
 
 ![raspi-pico](imgs/pio-raspi-pico-ports.png)
