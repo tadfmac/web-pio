@@ -62,7 +62,7 @@ The differences from the Web I2C API draft specification are as follows:
 
 In web-pio, to prevent conflicts between GPIO and I2C, pins used for I2C are excluded from the list of ports that can be exported by the Web GPIO API.    
 
-Please note that the port numbers used by the Web I2C API are logical. They may differ from the numbers listed in the datasheet.    
+Some port numbers used by the Web I2C API may differ from the numbers listed in the datasheet to conform to Arduino definitions.    
 
 See the diagram below for details.    
 
