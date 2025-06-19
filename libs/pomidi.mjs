@@ -23,7 +23,7 @@
 // npm i "@julusian/midi";
 
 
-const DEB = true;
+const DEB = false;
 
 const ONCHANGE_DELAY = 200;
 const ONCHANGE_INTERVAL_NODE = 500;
