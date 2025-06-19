@@ -136,7 +136,7 @@ class pomidi{
   init(options){
     if(DEB) console.log("pomidi.init()");
     return new Promise(async (resolve)=>{
-      try{
+//      try{
         this.isSysExEnable = options.sysex;
         if(this.isNode){
           this.midi = await import("@julusian/midi");
@@ -157,10 +157,10 @@ class pomidi{
             resolve(null);
           });
         }
-      }catch(e){
-        if(DEB) console.log("MIDI is not supported! : err="+e);
-        resolve(null);
-      }
+//      }catch(e){
+//        if(DEB) console.log("MIDI is not supported! : err="+e);
+//        resolve(null);
+//      }
     });    
   }
   _setHandleEvent(){
