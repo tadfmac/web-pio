@@ -4,6 +4,7 @@
 
 import http from 'http';
 import express from 'express';
+import cors from 'cors';
 
 const LISTEN_IP = "127.0.0.1";
 const LISTEN_PORT = 3100;
@@ -22,6 +23,7 @@ async function runExpressApp() {
   app = express();
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
+  app.use(cors());
   app.use('/',express.static("./"));
 }
 
