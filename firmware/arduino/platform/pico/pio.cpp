@@ -364,10 +364,11 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
 #ifdef DEB
       SerialTinyUSB.println("I2C_READBYTES received");
 #endif
-      res = i2cDeviceReadBytes(pMes[MES_B_IDX+1],pMes[MES_B_IDX+2],pMes[MES_B_IDX+3],&rawOutputData[MES_B_IDX+2]);
+      res = i2cDeviceReadBytes(pMes[MES_B_IDX+1],pMes[MES_B_IDX+2],pMes[MES_B_IDX+3],&rawOutputData[MES_B_IDX+3]);
       rawOutputData[MES_B_IDX+1] = res;
       if(res == 1){
-        _size = (MES_H_SIZE+2)+pMes[MES_B_IDX+2];
+        rawOutputData[MES_B_IDX+2] = pMes[MES_B_IDX+3];
+        _size = (MES_H_SIZE+2)+pMes[MES_B_IDX+3];
       }else{
         _size = MES_H_SIZE+1;
       }
@@ -426,6 +427,14 @@ SerialTinyUSB.println();
 }
 
 void sendFuncAnswer(uint8_t *pMess,size_t _size){
+#ifdef DEB
+  SerialTinyUSB.print("rawOutData: ");
+  for (uint16_t i = 0; i < _size; i++) {
+    SerialTinyUSB.print(pMess[i], HEX); SerialTinyUSB.print(" ");
+  }
+  SerialTinyUSB.println();
+#endif
+
   sendLen = encodeToMidiSysEx(pMess,_size,sysExOutData,sizeof(sysExOutData));
 
 #ifdef DEB
@@ -806,8 +815,8 @@ uint8_t i2cDeviceReadBytes(uint8_t portNum, uint8_t address, uint8_t size, uint8
   pWire->requestFrom(address, (uint8_t)size);
   int readSize = pWire->available();
   if(size == readSize){
-    *pOut = size;
-    pOut++;
+//    *pOut = size;
+//    pOut++;
     for(int cnt=0;cnt<readSize;cnt++){
       *(pOut + cnt) = pWire->read();
     }
