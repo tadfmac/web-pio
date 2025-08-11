@@ -1,6 +1,6 @@
 # web-pio
 
-![web-pio logo](imgs/web-pio-logo.png)
+![web-pio logo](../imgs/web-pio-logo.png)
 
 ## How to building firmware using Arduino CLI
 
