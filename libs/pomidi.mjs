@@ -27,6 +27,9 @@ const DEB = false;
 const ONCHANGE_DELAY = 200;
 const ONCHANGE_INTERVAL_NODE = 500;
 
+const NODE_MIDI_INPUT_BUFFER_SIZE = 32768;
+const NODE_MIDI_INPUT_MESSAGE_NUM = 64;
+
 class PortWatcher {
   constructor(midi) {
     this.midi = midi;
@@ -199,7 +202,7 @@ class pomidi {
   setHandler(func, devices) {
     if (DEB) console.log("poormidi.setHandler() devices=" + devices);
     if (this.midi == null) {
-      console.log("poormidi.setHandler() NG! MIDI is not supported!");
+      console.error("poormidi.setHandler() NG! MIDI is not supported!");
       return;
     }
     this.onMidiEvent = func;
@@ -222,7 +225,7 @@ class pomidi {
     if (DEB) console.log("poormidi.addDevice() device=" + device);
     if (device != undefined) {
       if (device in this.devices) {
-        if (DEB) console.log("poormidi.addDevice() device already exists.");
+        console.error("poormidi.addDevice() device already exists.");
       } else {
         this.devices[device] = device;
       }
@@ -235,7 +238,7 @@ class pomidi {
       if (device in this.devices) {
         delete this.devices[device];
       } else {
-        if (DEB) console.log("poormidi.removeDevice() device is not exists.");
+        console.error("poormidi.removeDevice() device is not exists.");
       }
     }
     this._setHandleEvent();
@@ -243,7 +246,7 @@ class pomidi {
   setOnChange(func) {
     if (DEB) console.log("poormidi.setOnChange()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.setOnChange() NG! MIDI is not supported!");
+      console.error("poormidi.setOnChange() NG! MIDI is not supported!");
       return;
     }
     this.onChangeEvent = func;
@@ -251,7 +254,7 @@ class pomidi {
   sendNoteOn() {
     if (DEB) console.log("poormidi.sendNoteOn()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.sendNoteOn() NG! MIDI is not supported!");
+      console.error("poormidi.sendNoteOn() NG! MIDI is not supported!");
       return;
     }
     let note = 0;
@@ -278,7 +281,7 @@ class pomidi {
       velocity = arguments[2];
       devices = arguments[3]; // array
     } else {
-      if (DEB) console.log("poormidi.sendNoteOn:parameter error!!");
+      console.error("poormidi.sendNoteOn:parameter error!!");
       return 0;
     }
     for (let name in this.outputs) {
@@ -304,7 +307,7 @@ class pomidi {
   sendNoteOff() {
     if (DEB) console.log("poormidi.sendNoteOff()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.sendNoteOff() NG! MIDI is not supported!");
+      console.error("poormidi.sendNoteOff() NG! MIDI is not supported!");
       return;
     }
     let note = 0;
@@ -324,7 +327,7 @@ class pomidi {
       note = arguments[1];
       devices = arguments[2]; // array
     } else {
-      if (DEB) console.log("poormidi.sendNoteOff:parameter error!!");
+      console.error("poormidi.sendNoteOff:parameter error!!");
       return 0;
     }
     for (let name in this.outputs) {
@@ -350,7 +353,7 @@ class pomidi {
   sendCtlChange() {
     if (DEB) console.log("poormidi.sendCtlChange()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.sendCtlChange() NG! MIDI is not supported!");
+      console.error("poormidi.sendCtlChange() NG! MIDI is not supported!");
       return;
     }
     let channel = 0;
@@ -374,7 +377,7 @@ class pomidi {
       value = arguments[2];
       devices = arguments[3]; // array
     } else {
-      if (DEB) console.log("poormidi.sendCtlChange:parameter error!!");
+      console.error("poormidi.sendCtlChange:parameter error!!");
       return;
     }
     for (let name in this.outputs) {
@@ -400,11 +403,11 @@ class pomidi {
   sendNoteOnAt() {
     if (DEB) console.log("poormidi.sendNoteOnAt()");
     if (this.isNode) {
-      console.log("poormidi.sendNoteOnAt() is not supported on node.js!");
+      console.error("poormidi.sendNoteOnAt() is not supported on node.js!");
       return;
     }
     if (this.midi == null) {
-      console.log("poormidi.sendNoteOnAt() NG! MIDI is not supported!");
+      console.error("poormidi.sendNoteOnAt() NG! MIDI is not supported!");
       return;
     }
     let note = 0;
@@ -436,7 +439,7 @@ class pomidi {
       velocity = arguments[3];
       devices = arguments[4]; // array
     } else {
-      if (DEB) console.log("poormidi.sendNoteOnAt:parameter error!!");
+      console.error("poormidi.sendNoteOnAt:parameter error!!");
       return 0;
     }
     for (let name in this.outputs) {
@@ -462,11 +465,11 @@ class pomidi {
   sendSysEx(data, device) {
     if (DEB) console.log("poormidi.sendSysEx()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.sendSysEx() NG! MIDI is not supported!");
+      console.error("poormidi.sendSysEx() NG! MIDI is not supported!");
       return 0;
     }
     if (!this.isSysExEnable) {
-      if (DEB) console.log("poormidi.sendSysEx() NG! SysEx is not allowed!");
+      console.error("poormidi.sendSysEx() NG! SysEx is not allowed!");
       return 0;
     }
     let send = false;
@@ -481,7 +484,7 @@ class pomidi {
       if (DEB) console.log("sysEx send");
       return sendData.length;
     } else {
-      if (DEB) console.log("device not found!");
+      console.error("device not found!");
       return 0;
     }
   }
@@ -505,7 +508,7 @@ class pomidi {
       packed.push(temp & 0x7f);
     }
     if (packed.length > 254) {
-      if (DEB) console.log("Converted SysEx data exceeds 254 bytes");
+      console.error("Converted SysEx data exceeds 254 bytes");
       return [];
     }
     packed.unshift(0xf0);
@@ -514,7 +517,7 @@ class pomidi {
   }
   decodeFromMidiSysEx(sysex) {
     if (sysex.length < 2 || sysex[0] !== 0xf0 || sysex[sysex.length - 1] !== 0xf7) {
-      if (DEB) console.log("Invalid SysEx format: must start with 0xF0 and end with 0xF7");
+      console.error("Invalid SysEx format: must start with 0xF0 and end with 0xF7");
       return [];
     }
     const decoded = [];
@@ -523,7 +526,7 @@ class pomidi {
     for (let cnt = 1; cnt < sysex.length - 1; cnt++) {
       const byte = sysex[cnt];
       if (byte > 0x7f) {
-        if (DEB) console.log("Invalid SysEx data: byte exceeds 7-bit value - index=" + cnt);
+        console.error("Invalid SysEx data: byte exceeds 7-bit value - index=" + cnt);
         return [];
       }
       buffer |= byte << bitCount;
@@ -539,7 +542,7 @@ class pomidi {
   onStateChange() {
     if (DEB) console.log("poormidi.onStateChange()");
     if (this.midi == null) {
-      if (DEB) console.log("poormidi.onStateChange() NG! MIDI is not supported!");
+      console.error("poormidi.onStateChange() NG! MIDI is not supported!");
       return;
     }
     if (this.timer != null) {
@@ -660,6 +663,7 @@ class pomidi {
         }
         if (!(name in this.inputs)) {
           let input = new this.midi.Input();
+          input.setBufferSize(NODE_MIDI_INPUT_BUFFER_SIZE,NODE_MIDI_INPUT_MESSAGE_NUM);
           let id = this.watcher.getIdFromName("input", param.added[cnt]);
           if (this.isSysExEnable) {
             input.ignoreTypes(false, true, true);
@@ -667,7 +671,7 @@ class pomidi {
           try {
             input.openPort(id);
           } catch (e) {
-            console.log("input.openPort() eror" + e);
+            console.error("input.openPort() eror" + e);
           }
           this.inputs[name] = {
             input: input,
@@ -715,7 +719,7 @@ class pomidi {
       out.sendMessage(param);
       out.closePort(id);
     } catch (e) {
-      console.log("pomidi.sendNode() error=" + e);
+      console.error("pomidi.sendNode() error=" + e);
     }
   }
   wait(ms) {
