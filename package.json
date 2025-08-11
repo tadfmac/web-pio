@@ -1,6 +1,6 @@
 {
   "name": "web-pio",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "web-pio physical io for web",
   "type": "module",
   "main": "app.mjs",
