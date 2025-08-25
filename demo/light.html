@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+<meta name="description" content="physical-io test">
+<title>web-pio example (input)</title>
+<style>
+<style>
+*{
+  box-sizing: border-box;
+}
+html,body,main{
+  width:100%;
+  padding:10px;
+  margin:0px;
+}
+footer{
+  position:fixed;
+  bottom:0px;
+  left:0px;
+  text-align:center;
+  width:100%;
+  background-color:pink;
+}
+#log{
+  padding:10px;
+  width:100%;
+  height:300px;
+  overflow:scroll;
+  border:solid 1px black;
+  font-size:13px;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="logo">web-pio demo : Light & Fan</h1>
+</header>
+<main>
+  <button id="debug">debug</button>
+</main>
+<script type="module">
+import QRSCANNER from "./QRScanner.js";
+
+// web-pio example
+// blink.mjs
+// ©2025 by D.F.Mac. @TripArts Music
+
+const DEVNAME_LIGHT = "pio_xiaoRP2040-GL0oC3WoDn2";
+const LIGHT_PORT_POWER = 3;
+const LIGHT_PORT_LIGHT = 2;
+
+let light = null;
+let lightPowerPort = null;
+let lightPort = null;
+let lightOnOff = 0;
+
+const DEVNAME_FAN = "pio_xiaoRP2040-Gb0mHJapCG7";
+const FAN_PORT_OUT = 2;
+const FAN_PORT_GND = 4;
+
+let fan = null;
+let fanOutPort = null;
+let fanGndPort = null;
+let fanOnOff = 0;
+let qrPort = null;
+let qrDriver = null;
+
+import Pio from "../libs/pio.mjs";
+let pio = new Pio();
+pio.setOnFound(onFound);
+pio.setOnLeave(onLeave);
+await pio.init();
+
+async function lightInit(){
+  lightPowerPort = light.gpioAccess.ports.get(LIGHT_PORT_POWER);
+  await lightPowerPort.export("out");
+  await lightPowerPort.write(1);
+  lightPort = light.gpioAccess.ports.get(LIGHT_PORT_LIGHT);
+  await lightPort.export("out");
+  while(light.isActive == true){
+    lightOnOff ^= 1;
+    console.log("light ="+lightOnOff);
+    await lightPort.write(lightOnOff);
+    await pio.wait(1000);
+  }
+}
+
+async function fanQrInit(){
+  fanGndPort = fan.gpioAccess.ports.get(FAN_PORT_GND);
+  await fanGndPort.export("out");
+  await fanGndPort.write(0);
+  fanOutPort = fan.gpioAccess.ports.get(FAN_PORT_OUT);
+  await fanOutPort.export("out");
+  const defaultPort = fan.conf.getDefaultI2CPort();
+  qrPort = fan.i2cAccess.ports.get(defaultPort);
+  qrDriver = new QRSCANNER(qrPort,0x21);
+  await qrDriver.init();
+  let str = await qrDriver.scanData();
+  console.log(str);
+
+/*
+  while(fan.isActive == true){
+    fanOnOff ^= 1;
+    console.log("fan ="+fanOnOff);
+    await fanOutPort.write(fanOnOff);
+    await pio.wait(1000);
+  }
+*/
+}
+
+
+async function onFound(devices){ // devices =　List of devices recently connected.
+  for(let cnt=0;cnt<devices.length;cnt++){
+    console.log("device found : "+devices[cnt].name);
+    if(devices[cnt].name == DEVNAME_LIGHT){
+      if(light == null) light = devices[cnt];
+      console.log("light found="+cnt);
+      queueMicrotask(async ()=>{
+//        await lightInit();
+      })
+    }
+    if(devices[cnt].name == DEVNAME_FAN){
+      if(fan == null) fan = devices[cnt];
+      console.log("fan found="+cnt)
+      queueMicrotask(async ()=>{
+        await fanQrInit();
+      })
+    }
+  }
+}
+
+function onLeave(devices){ // devices = List of devices recently disconnected.
+  console.log("device disconnected!"+devices[0].name);
+}
+
+const $debug = document.querySelector("#debug");
+$debug.onclick = async (e) => {
+  console.dir(pio.devices);
+};
+
+</script>
+</body>
+</html>

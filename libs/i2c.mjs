@@ -388,8 +388,8 @@ class I2CSlaveDevice extends EventTarget {
         resolve(null);
         return;
       } else {
-        if (result[0] > 0 && result[0] == _data.length) {
-          resolve(result[1]); // result[1] == writed bytes
+        if (result[0] == 1) {
+          resolve(_data.length);
           return;
         } else {
           console.error("I2CSlaveDevice.writeBytes() error received. res=" + result[0]); // [0]:status [1]:result

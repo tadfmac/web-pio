@@ -93,12 +93,13 @@ class PipelineMIDI {
       //console.log("receive SysEx");
       let rawmes = this.midi.decodeFromMidiSysEx(message.data);
       let { mode, feat, session, id } = this.parseMessageHeader(rawmes);
+      if (DEB) console.log("mode="+mode+" feat="+feat+" session="+session+" id="+id);
       //console.dir(message.data);
-      //console.dir(rawmes);
+      if (DEB) console.dir(rawmes);
       //      let session = ""+((rawmes[2] & 0x00ff) | (rawmes[3] << 8));
       if (mode == 1) {
         if (id != this.id) {
-          if (DEB) console.log("PipelineMIDI._onmessage() invalid id!");
+          if (DEB) console.log("PipelineMIDI._onmessage() invalid id! this.id="+this.id+" resId="+id);
           return;
         }
         let resultData = rawmes.slice(ROUTER_HEADER_LEN);

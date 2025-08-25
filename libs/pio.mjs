@@ -45,7 +45,7 @@ class MIDIDevice {
   }
   activate() {
     return new Promise(async (resolve, reject) => {
-      if (DEB) console.log("MIDIDevice.activate()");
+      if (DEB) console.log("MIDIDevice.activate() "+this.name);
       if (this.isActive) {
         if (DEB) console.log("already activated. abort.");
         resolve(this);
@@ -56,7 +56,7 @@ class MIDIDevice {
       while (this.isWaitInit) {
         let result = await plmidi.send(this.name, F.DEVICE_ACTIVATE, []);
         if (result == null) {
-          if (DEB) console.log("MIDIDevice.activate() wait responce.");
+          if (DEB) console.log("MIDIDevice.activate() wait responce. "+this.name);
         } else {
           if (result[0] == 1) {
             this.isWaitInit = false;
@@ -70,7 +70,8 @@ class MIDIDevice {
             resolve(this);
             return;
           } else {
-            console.error("MIDIDevice.activate() error! handle NG");
+            this.isWaitInit = false;
+            console.error("MIDIDevice.activate() error! handle NG "+this.name);
             resolve(null);
             return;
           }
@@ -78,7 +79,8 @@ class MIDIDevice {
         await this.wait(500);
         retryCnt++;
         if (retryCnt >= 5) {
-          console.error("MIDIDevice.activate() error! no responce");
+          this.isWaitInit = false;
+          console.error("MIDIDevice.activate() error! no responce. "+this.name);
           resolve(null);
           return;
         }
@@ -207,6 +209,7 @@ class Pio {
       this.onLeaveFunc(devices);
     }
   }
+  /*
   _expireOnFoundEvent(foundDevices) {
     if (DEB) console.log("Pio._expireOnFoundEvent()");
     let res = [];
@@ -218,7 +221,7 @@ class Pio {
         console.log("device [" + foundDevices[cnt] + "] activate error");
       }
     }
-    Promise.all(res).then(() => {
+    Promise.allSettled(res).then((results) => {
       if (this.onFoundFunc != null) {
         let devices = [];
         if (Object.keys(this.targetPrefixes).length > 0) {
@@ -238,7 +241,39 @@ class Pio {
         }
         this.onFoundFunc(devices);
       }
+      if (DEB) console.dir(results);
     });
+  }
+  */
+  async _expireOnFoundEvent(foundDevices) {
+    if (DEB) console.log("Pio._expireOnFoundEvent()");
+    for (let cnt = 0; cnt < foundDevices.length; cnt++) {
+      try {
+        await this.devices[foundDevices[cnt]].activate();
+      } catch (e) {
+        console.log("device [" + foundDevices[cnt] + "] activate error");
+      }
+    }
+
+    if (this.onFoundFunc != null) {
+      let devices = [];
+      if (Object.keys(this.targetPrefixes).length > 0) {
+        for (let cnt = 0; cnt < foundDevices.length; cnt++) {
+          for (let prefix in this.targetPrefixes) {
+            let name = foundDevices[cnt].split("-")[0];
+            if (name == prefix) {
+              devices.push(this.devices[foundDevices[cnt]]);
+              break;
+            }
+          }
+        }
+      } else {
+        for (let cnt = 0; cnt < foundDevices.length; cnt++) {
+          devices.push(this.devices[foundDevices[cnt]]);
+        }
+      }
+      this.onFoundFunc(devices);
+    }
   }
   _getActiveDeviceList() {
     if (DEB) console.log("Pio._getActiveDeviceList()");
@@ -256,6 +291,7 @@ class Pio {
     let leaveDevices = [];
     let foundDevices = [];
     for (let cnt = 0; cnt < devices.length; cnt++) {
+      if (DEB) console.log("device.name="+devices[cnt].name);
       let name = devices[cnt].name;
       let sp = devList.find(name);
       if (sp != null) {
@@ -278,15 +314,19 @@ class Pio {
       }
     }
     for (let device in this.devices) {
+      if (DEB) console.log("device="+device);
       let isActive = false;
       for (let cnt = 0; cnt < devices.length; cnt++) {
         if (device == devices[cnt].name) {
+          if (DEB) console.log("activate");
           isActive = true;
           break;
         }
       }
       if (!isActive) {
+        if (DEB) console.log("suspend");
         if (this.devices[device].isActive) {
+          if (DEB) console.log("leave");
           this.devices[device].suspend();
           this.midi.removeDevice(device);
           leaveDevices.push(this.devices[device].name);
@@ -298,8 +338,9 @@ class Pio {
       this._expireOnLeaveEvent(leaveDevices);
     }
     if (foundDevices.length > 0) {
-      this._expireOnFoundEvent(foundDevices);
+      await this._expireOnFoundEvent(foundDevices);
     }
+    if(DEB) console.dir(this.devices)
   }
   _onChangeIP() {
     // そのうち書く
