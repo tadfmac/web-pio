@@ -71,7 +71,7 @@ class PipelineMIDI {
       };
       this.queue[device]["" + nowSession].timer = setTimeout(() => {
         delete this.queue[device]["" + nowSession];
-        console.error("Response timed out");
+        console.error("Response timed out device="+device);
         resolve(null);
         return;
       }, 5000);
@@ -93,13 +93,13 @@ class PipelineMIDI {
       //console.log("receive SysEx");
       let rawmes = this.midi.decodeFromMidiSysEx(message.data);
       let { mode, feat, session, id } = this.parseMessageHeader(rawmes);
-      if (DEB) console.log("mode="+mode+" feat="+feat+" session="+session+" id="+id);
+  console.log("mode="+mode+" feat="+feat+" session="+session+" id="+id+" device="+device);
       //console.dir(message.data);
       if (DEB) console.dir(rawmes);
       //      let session = ""+((rawmes[2] & 0x00ff) | (rawmes[3] << 8));
       if (mode == 1) {
         if (id != this.id) {
-          if (DEB) console.log("PipelineMIDI._onmessage() invalid id! this.id="+this.id+" resId="+id);
+  console.log("PipelineMIDI._onmessage() invalid id! this.id="+this.id+" resId="+id);
           return;
         }
         let resultData = rawmes.slice(ROUTER_HEADER_LEN);

@@ -18,7 +18,7 @@ import I2CAccess from "./i2c.mjs";
 
 const c = devList.getConst();
 
-const DEB = false;
+const DEB = true;
 
 class MIDIDevice {
   constructor() {
@@ -51,6 +51,16 @@ class MIDIDevice {
         resolve(this);
         return;
       }
+
+      this.isActive = true;
+      if (this.gpioAccess) {
+        this.gpioAccess._resume();
+      }
+      if (this.i2cAccess) {
+        this.i2cAccess._resume();
+      }
+      resolve(this);
+/*
       this.isWaitInit = true;
       let retryCnt = 0;
       while (this.isWaitInit) {
@@ -85,6 +95,7 @@ class MIDIDevice {
           return;
         }
       }
+*/
     });
   }
   async resume() {
@@ -247,6 +258,7 @@ class Pio {
   */
   async _expireOnFoundEvent(foundDevices) {
     if (DEB) console.log("Pio._expireOnFoundEvent()");
+    if (DEB) console.dir(foundDevices);
     for (let cnt = 0; cnt < foundDevices.length; cnt++) {
       try {
         await this.devices[foundDevices[cnt]].activate();
@@ -297,6 +309,7 @@ class Pio {
       if (sp != null) {
         if (sp.type == c.DEVICE_TYPE_MIDI) {
           if (!(name in this.devices)) {
+            if (DEB) console.log("new device found!");
             let device = new MIDIDevice();
             device = device.init(name);
             this.devices[name] = device;
@@ -304,11 +317,13 @@ class Pio {
             this.midi.addDevice(name);
             foundDevices.push(name);
           } else {
+            if (DEB) console.log("existing device found!");
             if (!this.devices[name].isActive) {
+              if (DEB) console.log("existing device to resume!");
               this.devices[name].isWaitInit = true;
+              this.midi.addDevice(name);
               foundDevices.push(name);
             }
-            this.midi.addDevice(name);
           }
         }
       }

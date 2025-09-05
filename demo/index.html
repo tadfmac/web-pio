@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+<meta name="description" content="physical-io test">
+<title>web-pio demo</title>
+<style>
+<style>
+*{
+  box-sizing: border-box;
+}
+html,body,main{
+  width:100%;
+  padding:0px;
+  margin:0px;
+  height:100%;
+  overflow:hidden;
+}
+footer{
+  position:fixed;
+  bottom:0px;
+  left:0px;
+  text-align:center;
+  width:100%;
+  background-color:pink;
+}
+#log{
+  padding:10px;
+  width:100%;
+  height:300px;
+  overflow:scroll;
+  border:solid 1px black;
+  font-size:13px;
+}
+#debug{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+}
+.statusWrap{
+  width:240px;
+  height:40px;
+  display:flex;
+  flex-direction:row;
+}
+.label{
+  font-size:16px;
+  vertical-align:middle;
+  line-height: 40px;
+  background-color:black;
+  color:white;
+  width:80px;
+  padding:0 10px;
+}
+.status{
+  font-size:16px;
+  vertical-align:middle;
+  line-height: 40px;
+  flex:1;
+  padding:0 10px;
+  text-align:center;
+}
+#fan{
+  position:fixed;
+  top:20px;
+  right:20px;
+}
+#light{
+  position:fixed;
+  top:70px;
+  right:20px;
+}
+.disconnected{
+  background-color:gray;
+}
+.connected{
+  background-color:deeppink;
+}
+#logo{
+  background-image:url("../imgs/web-pio-logo.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  width:64px;
+  height:64px;
+}
+header{
+  padding-left:20px;
+  padding-top:20px;
+  display:flex;
+  flex-direction:row;
+}
+section{
+  padding:0px 20px;
+}
+
+
+#title{
+  font-size:32px;
+  margin-left:20px;
+  vertical-align: middle;
+  line-height: 64px;
+  font-weight: bold;
+}
+#bgWrap{
+  width:100%;
+  height:100%;
+  position:fixed;
+  z-index: -100;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+#centerview{
+  width:600px;
+  height:300px;
+  font-size:64px;
+  vertical-align: middle;
+  line-height: 300px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div id="bgWrap">
+  <div id="centerview"></div>
+</div>
+<header>
+  <div id="logo"></div>
+  <div id="title">web-pio demo : Light & Fan</div>
+</header>
+<section>
+  <p>QRコードリーダーでファンと電球のON/OFFを行います。</p>
+</section>
+<main>
+  <button id="debug">debug</button>
+  <div class="statusWrap" id="fan">
+    <div class="label">FAN</div>
+    <div class="status disconnected" id="fanstatus">disconnected</div>
+  </div>
+  <div class="statusWrap" id="light">
+    <div class="label">LIGHT</div>
+    <div class="status disconnected" id="lightstatus">disconnected</div>
+  </div>
+</main>
+<script type="module">
+import QRSCANNER from "./QRScanner.js";
+
+const $fanstatus = document.querySelector("#fanstatus");
+const $lightstatus = document.querySelector("#lightstatus");
+const $centerview = document.querySelector("#centerview");
+
+// web-pio example
+// blink.mjs
+// ©2025 by D.F.Mac. @TripArts Music
+
+const DEVNAME_LIGHT = "pio_xiaoRP2040-GL0oC3WoDn2";
+const LIGHT_PORT_POWER = 3;
+const LIGHT_PORT_LIGHT = 2;
+
+let light = null;
+let lightPowerPort = null;
+let lightPort = null;
+let lightOnOff = 0;
+
+const DEVNAME_FAN = "pio_xiaoRP2040-Gb0mHJapCG7";
+const FAN_PORT_OUT = 2;
+const FAN_PORT_GND = 4;
+
+let fan = null;
+let fanOutPort = null;
+let fanGndPort = null;
+let fanOnOff = 0;
+let qrPort = null;
+let qrDriver = null;
+let qrTimeout = null;
+
+import Pio from "../libs/pio.mjs";
+let pio = new Pio();
+pio.setOnFound(onFound);
+pio.setOnLeave(onLeave);
+await pio.init();
+
+function startCenterView(str){
+  $centerview.innerHTML = str;
+  setTimeout((e)=>{
+    $centerview.innerHTML = "";
+  },2000);
+}
+
+async function lightInit(){
+  lightPowerPort = light.gpioAccess.ports.get(LIGHT_PORT_POWER);
+  await lightPowerPort.export("out");
+  await lightPowerPort.write(1);
+  lightPort = light.gpioAccess.ports.get(LIGHT_PORT_LIGHT);
+  await lightPort.export("out");
+  viewConnect($lightstatus);
+}
+
+function viewDisconnect($dom){
+  $dom.classList.add("disconnected");
+  $dom.classList.remove("connected");
+  $dom.innerHTML = "disconnected";
+}
+
+function viewConnect($dom){
+  $dom.classList.add("connected");
+  $dom.classList.remove("disconnected");
+  $dom.innerHTML = "connected";
+}
+
+async function startQR(){
+  const str = await qrDriver.scanData();
+  console.log(str);
+  const res = await dispatchScan(str);
+  const time = (res != 0)? 5000:1000;
+  if(qrTimeout){
+    stopQR();
+  }
+  qrTimeout = setTimeout(async ()=>{
+    await startQR();
+  }, time);
+}
+
+async function dispatchScan(str){
+  let result = 0;
+  switch(str){
+    case "web-pio-demo:fan-on":
+      startCenterView("FAN ON !");
+      await fanOn();
+      result = 1;
+      break;
+    case "web-pio-demo:fan-off":
+      startCenterView("FAN OFF !");
+      await fanOff();
+      result = 2;
+      break;
+    case "web-pio-demo:light-on":
+      startCenterView("LIGHT ON !");
+      await lightOn();
+      result = 3;
+      break;
+    case "web-pio-demo:light-off":
+      startCenterView("LIGHT OFF !");
+      await lightOff();
+      result = 4;
+      break;
+    default:break;
+  }
+  return result;
+}
+
+function stopQR(){
+  clearTimeout(qrTimeout);
+  qrTimeout = null;
+}
+
+async function fanOn(){
+  if(fan && fanOutPort){
+    await fanOutPort.write(1);
+  }
+}
+
+async function fanOff(){
+  if(fan && fanOutPort){
+    await fanOutPort.write(0);
+  }
+}
+
+async function lightOn(){
+  if(light && lightPort){
+    await lightPort.write(1);
+  }
+}
+
+async function lightOff(){
+  if(light && lightPort){
+    await lightPort.write(0);
+  }
+}
+
+async function fanQrInit(){
+  fanGndPort = fan.gpioAccess.ports.get(FAN_PORT_GND);
+  await fanGndPort.export("out");
+  await fanGndPort.write(0);
+  fanOutPort = fan.gpioAccess.ports.get(FAN_PORT_OUT);
+  await fanOutPort.export("out");
+  const defaultPort = fan.conf.getDefaultI2CPort();
+  qrPort = fan.i2cAccess.ports.get(defaultPort);
+  qrDriver = new QRSCANNER(qrPort,0x21);
+  await qrDriver.init();
+  viewConnect($fanstatus);
+  startQR();
+}
+
+async function onFound(devices){ // devices =　List of devices recently connected.
+  for(let cnt=0;cnt<devices.length;cnt++){
+    console.log("device found : "+devices[cnt].name);
+    if(devices[cnt].name == DEVNAME_LIGHT){
+      if(light == null) light = devices[cnt];
+      console.log("light found="+cnt);
+      queueMicrotask(async ()=>{
+        await lightInit();
+      })
+    }
+    if(devices[cnt].name == DEVNAME_FAN){
+      if(fan == null) fan = devices[cnt];
+      console.log("fan found="+cnt)
+      queueMicrotask(async ()=>{
+        await fanQrInit();
+      })
+    }
+  }
+}
+
+function onLeave(devices){ // devices = List of devices recently disconnected.
+  console.log("device disconnected!"+devices[0].name);
+  for(let cnt=0;cnt<devices.length;cnt++){
+    if(devices[cnt].name == DEVNAME_FAN){
+      stopQR();
+      fan = null;
+      fanGndPort = null;
+      fanOutPort = null;
+      qrPort = null;
+      qrDriver = null;
+      viewDisconnect($fanstatus);
+    }
+    if(devices[cnt].name == DEVNAME_LIGHT){
+      light = null;
+      lightPowerPort = null;
+      lightPort = null;
+      viewDisconnect($lightstatus);
+    }
+  }
+}
+
+const $debug = document.querySelector("#debug");
+$debug.onclick = async (e) => {
+  console.dir(pio.devices);
+};
+
+</script>
+</body>
+</html>

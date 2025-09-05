@@ -24,7 +24,7 @@
 
 const DEB = false;
 
-const ONCHANGE_DELAY = 200;
+const ONCHANGE_DELAY = 1000;
 const ONCHANGE_INTERVAL_NODE = 500;
 
 const NODE_MIDI_INPUT_BUFFER_SIZE = 32768;
@@ -111,7 +111,7 @@ class handler {
   }
   handler(e) {
     //console.log("@@@@@ incomming");
-    if (DEB) console.log("handler.hander() dev:" + this.device + " e:" + e);
+console.log("handler.hander() dev:" + this.device + " e:" + e);
     if (this.handler != null) {
       this.func(e, this.device);
     }

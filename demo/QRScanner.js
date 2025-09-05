@@ -68,7 +68,7 @@ class QRScanner {
       }, ms);
     });
   }
-  async scanData(timeoutMs = 180000) {
+  async scanData(timeoutMs = 86400000) {
     const startTime = Date.now();
     for (;;) {
       if (Date.now() - startTime >= timeoutMs) {
