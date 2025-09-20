@@ -111,7 +111,7 @@ class handler {
   }
   handler(e) {
     //console.log("@@@@@ incomming");
-console.log("handler.hander() dev:" + this.device + " e:" + e);
+    if (DEB) console.log("handler.hander() dev:" + this.device + " e:" + e);
     if (this.handler != null) {
       this.func(e, this.device);
     }
@@ -688,7 +688,7 @@ class pomidi {
                 this.inputs[name].onmidimessage(message);
               }
             } catch (e) {
-              console.log("onMessageNode() error = " + e);
+              console.error("onMessageNode() error = " + e);
             }
           }
 
