@@ -18,7 +18,7 @@ import I2CAccess from "./i2c.mjs";
 
 const c = devList.getConst();
 
-const DEB = true;
+const DEB = false;
 
 class MIDIDevice {
   constructor() {
