@@ -58,16 +58,19 @@ class PortWatcher {
   getPortNames() {
     const out = new this.midi.Output();
     const input = new this.midi.Input();
-    const num = out.getPortCount();
     const names = [];
     this.inPorts = {};
     this.outPorts = {};
-    for (let cnt = 0; cnt < num; cnt++) {
+    const outNum = out.getPortCount();
+    for (let cnt = 0; cnt < outNum; cnt++) {
       let outName = out.getPortName(cnt);
       names.push(outName);
-      this.inPorts[outName] = cnt;
-      let inName = input.getPortName(cnt);
       this.outPorts[outName] = cnt;
+    }
+    const inNum = input.getPortCount();
+    for (let cnt = 0; cnt < inNum; cnt++) {
+      let inName = input.getPortName(cnt);
+      this.inPorts[inName] = cnt;
     }
     return names;
   }
@@ -182,22 +185,15 @@ class pomidi {
       return;
     }
     for (let name in this.inputs) {
-      for (let device in this.devices) {
-        if (device == name) {
-          let hdr = new handler();
-          hdr.setDevice(name);
-          hdr.setHandler(this.onMidiEvent);
-          this.inputs[name].onmidimessage = hdr.handler.bind(hdr);
-          //         console.log("setHandler");
-        } else {
-          this.inputs[name].onmidimessage = null;
-        }
+      if (name in this.devices) {
+        let hdr = new handler();
+        hdr.setDevice(name);
+        hdr.setHandler(this.onMidiEvent);
+        this.inputs[name].onmidimessage = hdr.handler.bind(hdr);
+      } else {
+        this.inputs[name].onmidimessage = null;
       }
     }
-    //    console.log("<---- _setHandleEvent()");
-    //    console.dir(this.inputs);
-    //    console.log("this.devices ");
-    //    console.dir(this.devices);
   }
   setHandler(func, devices) {
     if (DEB) console.log("poormidi.setHandler() devices=" + devices);
