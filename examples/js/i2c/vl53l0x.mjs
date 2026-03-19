@@ -9,15 +9,16 @@ let pio = new Pio();
 pio.setOnFound(onFound);
 await pio.init();
 
-async function onFound(devices){ // devices =　List of devices recently connected.
-  console.log("device found : "+devices[0].name);
+async function onFound(devices) {
+  // devices =　List of devices recently connected.
+  console.log("device found : " + devices[0].name);
   const defaultPort = devices[0].conf.getDefaultI2CPort();
   const port = devices[0].i2cAccess.ports.get(defaultPort);
-  const vl53l0x = new VL53l0X(port,0x29);
+  const vl53l0x = new VL53l0X(port, 0x29);
   await vl53l0x.init();
-  while(devices[0].isActive){
+  while (devices[0].isActive) {
     let distance = await vl53l0x.getRange();
-    console.log("distance="+distance);
+    console.log("distance=" + distance);
     pio.wait(500);
   }
 }

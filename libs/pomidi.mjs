@@ -80,7 +80,7 @@ class PortWatcher {
         added: addedOutputs,
         removed: removedOutputs,
         all: currentOutputs,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       if (this.onchange != null) {
         this.onchange(param);
@@ -90,7 +90,7 @@ class PortWatcher {
   }
   getIdFromName(type, name) {
     let res = null;
-    if ((type = "input")) {
+    if (type === "input") {
       res = this.inPorts[name];
     } else {
       res = this.outPorts[name];
@@ -166,7 +166,7 @@ class pomidi {
               console.error("pomidi.init() MIDI unsupported! : err=" + err);
               resolve(null);
               return;
-            },
+            }
           );
         }
       } catch (e) {
@@ -639,6 +639,9 @@ class pomidi {
 
       for (let cnt = 0; cnt < param.removed.length; cnt++) {
         if (param.removed[cnt] in this.outputs) {
+          try {
+            this.outputs[param.removed[cnt]].output.closePort();
+          } catch (e) {}
           delete this.outputs[param.removed[cnt]];
         }
         if (param.removed[cnt] in this.inputs) {
@@ -653,17 +656,22 @@ class pomidi {
         if (!(name in this.outputs)) {
           let out = new this.midi.Output();
           let id = this.watcher.getIdFromName("output", param.added[cnt]);
+          try {
+            out.openPort(id);
+          } catch (e) {
+            console.error("output.openPort() error=" + e);
+          }
           this.outputs[param.added[cnt]] = {
             output: out,
             name: param.added[cnt],
             send: (param) => {
               this.sendNode(out, id, param);
-            },
+            }
           };
         }
         if (!(name in this.inputs)) {
           let input = new this.midi.Input();
-          input.setBufferSize(NODE_MIDI_INPUT_BUFFER_SIZE,NODE_MIDI_INPUT_MESSAGE_NUM);
+          input.setBufferSize(NODE_MIDI_INPUT_BUFFER_SIZE, NODE_MIDI_INPUT_MESSAGE_NUM);
           let id = this.watcher.getIdFromName("input", param.added[cnt]);
           if (this.isSysExEnable) {
             input.ignoreTypes(false, true, true);
@@ -676,7 +684,7 @@ class pomidi {
           this.inputs[name] = {
             input: input,
             name: param.added[cnt],
-            onmidimessage: null,
+            onmidimessage: null
           };
 
           function onMessageNode(time, mes) {
@@ -715,9 +723,7 @@ class pomidi {
       return;
     }
     try {
-      out.openPort(id);
       out.sendMessage(param);
-      out.closePort(id);
     } catch (e) {
       console.error("pomidi.sendNode() error=" + e);
     }

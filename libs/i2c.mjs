@@ -127,7 +127,7 @@ class I2CPort extends EventTarget {
     const address = ev.address;
     setTimeout((address) => {
       console.log("I2CPort._slaveClosed() delete i2cSlaveDevice instance. addr=" + address);
-      this.i2cDevices[address];
+      delete this.i2cDevices[address];
     }, 3);
   }
 }
@@ -141,6 +141,7 @@ class I2CSlaveDevice extends EventTarget {
     this.closeCallback = closeCallback; // I2CPort側のcallback。このインスタンスを時間差で消す
     this.isActive = false;
     this.onclose = null; // user callback on close
+    this._reiniting = false;
   }
   init() {
     return new Promise(async (resolve) => {
@@ -176,6 +177,23 @@ class I2CSlaveDevice extends EventTarget {
     }
     this.dispatchEvent(ev);
     this.closeCallback(ev);
+    // USB reconnect 等でファームウェアが I2C アドレスをクローズした場合に自動再初期化する
+    this._autoReinit();
+  }
+  async _autoReinit() {
+    if (this._reiniting) return;
+    this._reiniting = true;
+    if (DEB) console.log("I2CSlaveDevice._autoReinit() start port=" + this.portNumber + " address=" + this.address);
+    for (let i = 0; i < 5; i++) {
+      if (this.isActive) break;
+      if (DEB) console.log("I2CSlaveDevice._autoReinit() attempt=" + i);
+      let result = await this.init();
+      if (result != null) break;
+      if (DEB) console.log("I2CSlaveDevice._autoReinit() failed attempt=" + i + " retry after 500ms");
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    if (DEB) console.log("I2CSlaveDevice._autoReinit() done isActive=" + this.isActive);
+    this._reiniting = false;
   }
   read8(register) {
     return new Promise(async (resolve) => {

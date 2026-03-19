@@ -11,7 +11,7 @@ const DEF = {
   LED_TYPE_RGB: 1,
   LED_TYPE_MONO: 2,
   DEVICE_TYPE_WIFI: 1,
-  DEVICE_TYPE_MIDI: 2,
+  DEVICE_TYPE_MIDI: 2
 };
 
 // Supported Devices
@@ -28,12 +28,12 @@ const supportedDevices = {
     leds: {
       default: { type: DEF.LED_TYPE_RGB }, // RGB LED (0)
       0: { type: DEF.LED_TYPE_RGB }, // RGB LED (0)
-      1: { type: DEF.LED_TYPE_RGB }, // NEOPIXEL (1)
+      1: { type: DEF.LED_TYPE_RGB } // NEOPIXEL (1)
     },
     info: {
       voltage: 3.3,
-      reference: "https://wiki.seeedstudio.com/XIAO-RP2040/",
-    },
+      reference: "https://wiki.seeedstudio.com/XIAO-RP2040/"
+    }
   },
   pio_xiaoRP2350: {
     type: DEF.DEVICE_TYPE_MIDI,
@@ -47,12 +47,12 @@ const supportedDevices = {
     leds: {
       default: { type: DEF.LED_TYPE_MONO }, // UserLED (0)
       0: { type: DEF.LED_TYPE_MONO }, // UserLED (0)
-      1: { type: DEF.LED_TYPE_RGB }, // NEOPIXEL (1)
+      1: { type: DEF.LED_TYPE_RGB } // NEOPIXEL (1)
     },
     info: {
       voltage: 3.3,
-      reference: "https://wiki.seeedstudio.com/getting-started-xiao-rp2350/",
-    },
+      reference: "https://wiki.seeedstudio.com/getting-started-xiao-rp2350/"
+    }
   },
   pio_RaspiPico: {
     type: DEF.DEVICE_TYPE_MIDI,
@@ -65,12 +65,12 @@ const supportedDevices = {
     defaultI2cPort: 0,
     leds: {
       default: { type: DEF.LED_TYPE_MONO }, // User LED (D25)
-      0: { type: DEF.LED_TYPE_MONO }, // User LED (D25)
+      0: { type: DEF.LED_TYPE_MONO } // User LED (D25)
     },
     info: {
       voltage: 3.3,
-      reference: "https://www.raspberrypi.com/products/raspberry-pi-pico/",
-    },
+      reference: "https://www.raspberrypi.com/products/raspberry-pi-pico/"
+    }
   },
   pio_RaspiPico2: {
     type: DEF.DEVICE_TYPE_MIDI,
@@ -83,13 +83,13 @@ const supportedDevices = {
     defaultI2cPort: 0,
     leds: {
       default: { type: DEF.LED_TYPE_MONO }, // User LED (D25)
-      0: { type: DEF.LED_TYPE_MONO }, // User LED (D25)
+      0: { type: DEF.LED_TYPE_MONO } // User LED (D25)
     },
     info: {
       voltage: 3.3,
-      reference: "https://www.raspberrypi.com/products/raspberry-pi-pico-2/",
-    },
-  },
+      reference: "https://www.raspberrypi.com/products/raspberry-pi-pico-2/"
+    }
+  }
 };
 
 class SupportDevices {

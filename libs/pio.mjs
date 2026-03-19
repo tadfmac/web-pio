@@ -45,7 +45,7 @@ class MIDIDevice {
   }
   activate() {
     return new Promise(async (resolve, reject) => {
-      if (DEB) console.log("MIDIDevice.activate() "+this.name);
+      if (DEB) console.log("MIDIDevice.activate() " + this.name);
       if (this.isActive) {
         if (DEB) console.log("already activated. abort.");
         resolve(this);
@@ -60,7 +60,7 @@ class MIDIDevice {
         this.i2cAccess._resume();
       }
       resolve(this);
-/*
+      /*
       this.isWaitInit = true;
       let retryCnt = 0;
       while (this.isWaitInit) {
@@ -303,7 +303,7 @@ class Pio {
     let leaveDevices = [];
     let foundDevices = [];
     for (let cnt = 0; cnt < devices.length; cnt++) {
-      if (DEB) console.log("device.name="+devices[cnt].name);
+      if (DEB) console.log("device.name=" + devices[cnt].name);
       let name = devices[cnt].name;
       let sp = devList.find(name);
       if (sp != null) {
@@ -329,7 +329,7 @@ class Pio {
       }
     }
     for (let device in this.devices) {
-      if (DEB) console.log("device="+device);
+      if (DEB) console.log("device=" + device);
       let isActive = false;
       for (let cnt = 0; cnt < devices.length; cnt++) {
         if (device == devices[cnt].name) {
@@ -355,7 +355,7 @@ class Pio {
     if (foundDevices.length > 0) {
       await this._expireOnFoundEvent(foundDevices);
     }
-    if(DEB) console.dir(this.devices)
+    if (DEB) console.dir(this.devices);
   }
   _onChangeIP() {
     // そのうち書く

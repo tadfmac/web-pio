@@ -30,7 +30,7 @@ const F = {
   DIR_IN: 2,
   DIR_INPULLUP: 3,
   DIR_PWM: 4,
-  DIR_ADC: 5,
+  DIR_ADC: 5
 };
 
 export default F;

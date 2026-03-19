@@ -11,8 +11,9 @@ await pio.init();
 let inPort = null;
 let outPort = null;
 
-async function onFound(devices){ // devices =　List of devices recently connected.
-  console.log("device found : "+devices[0].name);
+async function onFound(devices) {
+  // devices =　List of devices recently connected.
+  console.log("device found : " + devices[0].name);
   let onOff = 0;
   inPort = devices[0].gpioAccess.ports.get(1);
   inPort.onchange = onChange;
@@ -21,15 +22,16 @@ async function onFound(devices){ // devices =　List of devices recently connect
   await outPort.export("out");
 }
 
-async function onChange(ev){
-  console.log("onChange onOff="+ev.value);
-  if(outPort){
+async function onChange(ev) {
+  console.log("onChange onOff=" + ev.value);
+  if (outPort) {
     await outPort.write(ev.value);
   }
 }
 
-function onLeave(devices){ // devices = List of devices recently disconnected.
-  console.log("device disconnected!"+devices[0].name);
+function onLeave(devices) {
+  // devices = List of devices recently disconnected.
+  console.log("device disconnected!" + devices[0].name);
   inPort = null;
   outPort = null;
 }

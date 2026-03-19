@@ -17,7 +17,7 @@ async function onFound(devices) {
   const sht40 = new SHT40(port, 0x44);
   await sht40.init();
   while (devices[0].isActive) {
-    let {temperature, humidity} = await sht40.readData();
+    let { temperature, humidity } = await sht40.readData();
     console.log("temperature=" + temperature + " humidity=" + humidity);
     pio.wait(500);
   }

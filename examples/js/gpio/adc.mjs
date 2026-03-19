@@ -10,20 +10,22 @@ await pio.init();
 
 let port = null;
 
-async function onFound(devices){ // devices =　List of devices recently connected.
-  console.log("device found : "+devices[0].name);
+async function onFound(devices) {
+  // devices =　List of devices recently connected.
+  console.log("device found : " + devices[0].name);
   port = devices[0].gpioAccess.ports.get(26);
   await port.export("adc");
-  while(devices[0].isActive){
+  while (devices[0].isActive) {
     let value = await port.analogRead();
-    if(value != null){
-      console.log("value="+value);
+    if (value != null) {
+      console.log("value=" + value);
     }
     await pio.wait(500);
   }
 }
 
-function onLeave(devices){ // devices = List of devices recently disconnected.
-  console.log("device disconnected!"+devices[0].name);
+function onLeave(devices) {
+  // devices = List of devices recently disconnected.
+  console.log("device disconnected!" + devices[0].name);
   port = null;
 }
