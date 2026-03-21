@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
     <meta name="description" content="physical-io test" />
-    <title>web-pio example (ADC)</title>
+    <title>web-pio example (SSD1306)</title>
     <style>
       * {
         box-sizing: border-box;
@@ -36,12 +36,13 @@
   </head>
   <body>
     <header>
-      <h1 id="logo">ADC</h1>
+      <h1 id="logo">ADT7410</h1>
     </header>
     <main>
       <section class="lv1">
         <h2>overview</h2>
-        <p>It will read the ADC value of GPIO port 26 of the first device found every 500ms and output it to console.log.</p>
+        <p>This is an example of the 128x32 OLED Display with SSD1306.</p>
+        <p>The OLED display shows "SSD1306 128x32".</p>
       </section>
       <section>
         <h3>log</h3>
@@ -50,7 +51,7 @@
     </main>
     <footer>©︎2025-2026 D.F.Mac.@TripArts Music</footer>
     <script type="module">
-      import "/examples/js/gpio/adc.mjs";
+      import "/examples/js/i2c/ssd1306.mjs";
       import logger from "../logger.mjs";
       const $log = document.querySelector("#log");
       new logger($log);

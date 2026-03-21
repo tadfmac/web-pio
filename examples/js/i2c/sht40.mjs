@@ -1,6 +1,6 @@
 // web-pio example
 // sht40.mjs
-// ©2025 by D.F.Mac. @TripArts Music
+// ©2025-2026 by D.F.Mac. @TripArts Music
 
 import Pio from "../../../libs/pio.mjs";
 import SHT40 from "../../../deps/drivers/sht40.js";

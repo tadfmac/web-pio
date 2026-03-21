@@ -1,6 +1,6 @@
 // web-pio example
 // vl53l0x.mjs
-// ©2025 by D.F.Mac. @TripArts Music
+// ©2025-2026 by D.F.Mac. @TripArts Music
 
 import Pio from "../../../libs/pio.mjs";
 import VL53l0X from "../../../deps/drivers/vl53l0x.js";

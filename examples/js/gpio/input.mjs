@@ -1,6 +1,6 @@
 // web-pio example
 // input.mjs
-// ©2025 by D.F.Mac. @TripArts Music
+// ©2025-2026 by D.F.Mac. @TripArts Music
 
 import Pio from "../../../libs/pio.mjs";
 let pio = new Pio();

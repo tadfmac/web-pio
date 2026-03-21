@@ -1,9 +1,9 @@
 // web-pio example
-// adt7410.mjs
+// ssd1306.mjs
 // ©2025-2026 by D.F.Mac. @TripArts Music
 
 import Pio from "../../../libs/pio.mjs";
-import ADT7410 from "../../../deps/drivers/adt7410.js";
+import OledDisplay from "../../../deps/tmp/grove-oled-display.js";
 
 let pio = new Pio();
 pio.setOnFound(onFound);
@@ -14,11 +14,9 @@ async function onFound(devices) {
   console.log("device found : " + devices[0].name);
   const defaultPort = devices[0].conf.getDefaultI2CPort();
   const port = devices[0].i2cAccess.ports.get(defaultPort);
-  const adt7410 = new ADT7410(port, 0x48);
-  await adt7410.init();
-  while (devices[0].isActive) {
-    let temperature = await adt7410.read();
-    console.log("temperature=" + temperature);
-    pio.wait(500);
-  }
+  const oledDisplay = new OledDisplay(port, 0x3c);
+  await oledDisplay.init("SSD1306",128,32);
+  oledDisplay.clearDisplayQ();
+  oledDisplay.drawStringQ(0, 0, "SSD1306 128x32");
+  await oledDisplay.playSequence();
 }
