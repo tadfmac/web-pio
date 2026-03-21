@@ -9,6 +9,8 @@
 //
 
 const ROUTER_HEADER_LEN = 8;
+// SysEx max 256 bytes → 254 encoded (7-bit) → 254×7/8 = 222 raw bytes → minus 8-byte header
+const MAX_PAYLOAD_SIZE = 214;
 const DEB = false;
 
 class PipelineMIDI {
@@ -39,8 +41,32 @@ class PipelineMIDI {
     let id = message[4] | (message[5] << 8) | (message[6] << 16) | (message[7] << 24);
     return { mode, feat, session, id };
   }
+  sendFire(device, feat, data) {
+    if (DEB) console.log("PipelineMIDI.sendFire() device=" + device + " feat=" + feat);
+    if (data.length > MAX_PAYLOAD_SIZE) {
+      console.error("PipelineMIDI.sendFire() payload too large: " + data.length + " > " + MAX_PAYLOAD_SIZE);
+      return;
+    }
+    let buf = [];
+    buf[0] = 0; // 0: Fire-and-forget (no response)
+    buf[1] = feat;
+    buf[2] = 0; // session = 0 (unused)
+    buf[3] = 0;
+    buf[4] = this.id & 0x00ff;
+    buf[5] = (this.id >> 8) & 0x00ff;
+    buf[6] = (this.id >> 16) & 0x00ff;
+    buf[7] = (this.id >> 24) & 0x00ff;
+    for (let cnt = 0; cnt < data.length; cnt++) {
+      buf[ROUTER_HEADER_LEN + cnt] = data[cnt];
+    }
+    this.midi.sendSysEx(buf, device);
+  }
   send(device, feat, data) {
     if (DEB) console.log("PipelineMIDI.send() device=" + device + " feat=" + feat);
+    if (data.length > MAX_PAYLOAD_SIZE) {
+      console.error("PipelineMIDI.send() payload too large: " + data.length + " > " + MAX_PAYLOAD_SIZE);
+      return Promise.resolve(null);
+    }
     return new Promise((resolve, reject) => {
       let len = data.length + ROUTER_HEADER_LEN;
       let buf = [];

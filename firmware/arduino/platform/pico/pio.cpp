@@ -208,8 +208,9 @@ void processMessage(uint8_t *pMes, size_t _mesSize){
   uint8_t lsb;
   uint8_t msb;
   uint16_t wordData;
+  uint8_t doRespond = (pMes[0] == 1) ? 1 : 0; // mode 0: fire-and-forget, mode 1: response required
 
-  if(pMes[0] == 1){ // funcCall
+  if(pMes[0] == 1 || pMes[0] == 0){ // funcCall
     copyHeader(pMes,rawOutputData);
     switch(pMes[1]){
     case DEVICE_INIT:
@@ -420,7 +421,7 @@ SerialTinyUSB.println();
     default:
       break;
     }
-    if(_size >= (MES_H_SIZE+1)){
+    if(doRespond && _size >= (MES_H_SIZE+1)){
       sendFuncAnswer(rawOutputData,_size);
     }
   }

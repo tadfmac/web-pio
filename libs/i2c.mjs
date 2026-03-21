@@ -250,61 +250,25 @@ class I2CSlaveDevice extends EventTarget {
       }
     });
   }
-  write8(register, _data) {
-    return new Promise(async (resolve) => {
-      if (DEB) console.log("I2CSlaveDevice.write8() port=" + this.portNumber + " address=" + this.address + " register=" + register + " data=" + _data + " device=" + this.conf.name);
-      if (!this.isActive) {
-        console.error("I2CSlaveDevice.write8() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      let data = [this.portNumber, this.address, register, _data];
-      let result = await plmidi.send(this.conf.name, F.I2C_WRITE8, data);
-      if (result == null) {
-        console.error("I2CSlaveDevice.write8() error! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] == 1) {
-          if (DEB) console.log("I2CSlaveDevice.write8() OK");
-          resolve(result[1]); // result[1] = 1
-          return;
-        } else {
-          console.error("I2CSlaveDevice.write8() error received."); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async write8(register, _data) {
+    if (DEB) console.log("I2CSlaveDevice.write8() port=" + this.portNumber + " address=" + this.address + " register=" + register + " data=" + _data + " device=" + this.conf.name);
+    if (!this.isActive) {
+      console.error("I2CSlaveDevice.write8() error! : Device is suspended!");
+      return null;
+    }
+    plmidi.sendFire(this.conf.name, F.I2C_WRITE8, [this.portNumber, this.address, register, _data]);
+    return true;
   }
-  write16(register, _data) {
-    return new Promise(async (resolve) => {
-      if (DEB) console.log("I2CSlaveDevice.write16() port=" + this.portNumber + " address=" + this.address + " register=" + register + " data=" + _data + " device=" + this.conf.name);
-      if (!this.isActive) {
-        console.error("I2CSlaveDevice.write16() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      let lsb = _data & 0x00ff;
-      let msb = _data >> 8;
-      let data = [this.portNumber, this.address, register, lsb, msb];
-      let result = await plmidi.send(this.conf.name, F.I2C_WRITE16, data);
-      if (result == null) {
-        console.error("I2CSlaveDevice.write16() error! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] == 1) {
-          if (DEB) console.log("I2CSlaveDevice.write16() OK");
-          resolve(result[1]); // result[1] = 2
-          return;
-        } else {
-          console.error("I2CSlaveDevice.write16() error received."); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async write16(register, _data) {
+    if (DEB) console.log("I2CSlaveDevice.write16() port=" + this.portNumber + " address=" + this.address + " register=" + register + " data=" + _data + " device=" + this.conf.name);
+    if (!this.isActive) {
+      console.error("I2CSlaveDevice.write16() error! : Device is suspended!");
+      return null;
+    }
+    let lsb = _data & 0x00ff;
+    let msb = _data >> 8;
+    plmidi.sendFire(this.conf.name, F.I2C_WRITE16, [this.portNumber, this.address, register, lsb, msb]);
+    return true;
   }
   readByte() {
     return new Promise(async (resolve) => {
@@ -362,60 +326,27 @@ class I2CSlaveDevice extends EventTarget {
       }
     });
   }
-  writeByte(_data) {
-    return new Promise(async (resolve) => {
-      if (DEB) console.log("I2CSlaveDevice.writeByte() port=" + this.portNumber + " address=" + this.address + " data=" + _data + " device=" + this.conf.name);
-      if (!this.isActive) {
-        console.error("I2CSlaveDevice.writeByte() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      let data = [this.portNumber, this.address, _data];
-      let result = await plmidi.send(this.conf.name, F.I2C_WRITEBYTE, data);
-      if (result == null) {
-        console.error("I2CSlaveDevice.writeByte() error! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] > 0) {
-          resolve(result[1]); // result[1] == 1
-          return;
-        } else {
-          console.error("I2CSlaveDevice.readByte() error received."); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async writeByte(_data) {
+    if (DEB) console.log("I2CSlaveDevice.writeByte() port=" + this.portNumber + " address=" + this.address + " data=" + _data + " device=" + this.conf.name);
+    if (!this.isActive) {
+      console.error("I2CSlaveDevice.writeByte() error! : Device is suspended!");
+      return null;
+    }
+    plmidi.sendFire(this.conf.name, F.I2C_WRITEBYTE, [this.portNumber, this.address, _data]);
+    return true;
   }
-  writeBytes(_data) {
-    return new Promise(async (resolve) => {
-      if (DEB) console.log("I2CSlaveDevice.writeBytes() port=" + this.portNumber + " address=" + this.address + " data=" + _data + " device=" + this.conf.name);
-      if (!this.isActive) {
-        console.error("I2CSlaveDevice.writeBytes() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      let data = [this.portNumber, this.address, _data.length];
-      for (let cnt = 0; cnt < _data.length; cnt++) {
-        data.push(_data[cnt]);
-      }
-      let result = await plmidi.send(this.conf.name, F.I2C_WRITEBYTES, data);
-      if (result == null) {
-        console.error("I2CSlaveDevice.writeBytes() error! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] == 1) {
-          resolve(_data.length);
-          return;
-        } else {
-          console.error("I2CSlaveDevice.writeBytes() error received. res=" + result[0]); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async writeBytes(_data) {
+    if (DEB) console.log("I2CSlaveDevice.writeBytes() port=" + this.portNumber + " address=" + this.address + " data=" + _data + " device=" + this.conf.name);
+    if (!this.isActive) {
+      console.error("I2CSlaveDevice.writeBytes() error! : Device is suspended!");
+      return null;
+    }
+    let data = [this.portNumber, this.address, _data.length];
+    for (let cnt = 0; cnt < _data.length; cnt++) {
+      data.push(_data[cnt]);
+    }
+    plmidi.sendFire(this.conf.name, F.I2C_WRITEBYTES, data);
+    return _data.length;
   }
 }
 

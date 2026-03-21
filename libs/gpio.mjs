@@ -237,37 +237,19 @@ class GPIOPort extends EventTarget {
       }
     });
   }
-  write(value) {
-    return new Promise(async (resolve, reject) => {
-      if (DEB) console.log("GPIOPort.write() value=" + value);
-      if (!this.isActive) {
-        console.error("GPIOPort.write() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      if (!this.exported || this.direction == "in" || this.direction == "in-pullup") {
-        console.error("GPIOPort.write() error! : export mode failed!");
-        resolve(null);
-        return;
-      }
-      if (DEB) console.log("GPIOPort.write() port=" + this.portNumber + " value=" + value + " device=" + this.conf.name);
-      let data = [this.portNumber, value];
-      let result = await plmidi.send(this.conf.name, F.GPIO_WRITE, data);
-      if (result == null) {
-        console.error("GPIOPort.write()! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] == 1) {
-          resolve(this);
-          return;
-        } else {
-          console.error("GPIOPort.write() error received."); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async write(value) {
+    if (DEB) console.log("GPIOPort.write() value=" + value);
+    if (!this.isActive) {
+      console.error("GPIOPort.write() error! : Device is suspended!");
+      return null;
+    }
+    if (!this.exported || this.direction == "in" || this.direction == "in-pullup") {
+      console.error("GPIOPort.write() error! : export mode failed!");
+      return null;
+    }
+    if (DEB) console.log("GPIOPort.write() port=" + this.portNumber + " value=" + value + " device=" + this.conf.name);
+    plmidi.sendFire(this.conf.name, F.GPIO_WRITE, [this.portNumber, value]);
+    return this;
   }
   analogRead() {
     return new Promise(async (resolve, reject) => {
@@ -330,45 +312,27 @@ class GPIOPort extends EventTarget {
       }
     });
   }
-  setPWM(_duty) {
-    return new Promise(async (resolve, reject) => {
-      if (DEB) console.log("GPIOPort.setPWM() duty=" + _duty);
-      if (!this.isActive) {
-        console.error("GPIOPort.setPWM() error! : Device is suspended!");
-        resolve(null);
-        return;
-      }
-      if (!this.exported || this.direction != "pwm") {
-        console.error("GPIOPort.setPWM() error! : export mode failed!");
-        resolve(null);
-        return;
-      }
-      let duty;
-      if (_duty < 0) {
-        duty = 0;
-      } else if (_duty > 255) {
-        duty = 255;
-      } else {
-        duty = _duty;
-      }
-      if (DEB) console.log("GPIOPort.setPWM() port=" + this.portNumber + " duty=" + duty + " device=" + this.conf.name);
-      let data = [this.portNumber, duty];
-      let result = await plmidi.send(this.conf.name, F.GPIO_SETPWM, data);
-      if (result == null) {
-        console.error("GPIOPort.setPWM() error! : plmidi.send() error");
-        resolve(null);
-        return;
-      } else {
-        if (result[0] == 1) {
-          resolve(this);
-          return;
-        } else {
-          console.error("GPIOPort.setPWM() error received."); // [0]:status [1]:result
-          resolve(null);
-          return;
-        }
-      }
-    });
+  async setPWM(_duty) {
+    if (DEB) console.log("GPIOPort.setPWM() duty=" + _duty);
+    if (!this.isActive) {
+      console.error("GPIOPort.setPWM() error! : Device is suspended!");
+      return null;
+    }
+    if (!this.exported || this.direction != "pwm") {
+      console.error("GPIOPort.setPWM() error! : export mode failed!");
+      return null;
+    }
+    let duty;
+    if (_duty < 0) {
+      duty = 0;
+    } else if (_duty > 255) {
+      duty = 255;
+    } else {
+      duty = _duty;
+    }
+    if (DEB) console.log("GPIOPort.setPWM() port=" + this.portNumber + " duty=" + duty + " device=" + this.conf.name);
+    plmidi.sendFire(this.conf.name, F.GPIO_SETPWM, [this.portNumber, duty]);
+    return this;
   }
   _onChangeEvent(onOff) {
     if (DEB) console.log("GPIOPort._onChangeEvent() portNumber=" + this.portNumber + "+onOff=" + onOff);

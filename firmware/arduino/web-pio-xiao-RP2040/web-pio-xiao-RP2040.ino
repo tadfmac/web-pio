@@ -25,7 +25,8 @@ extern "C" void flash_get_unique_id(uint8_t *p);
 
 Adafruit_USBD_MIDI usb_midi;
 
-MIDI_CREATE_CUSTOM_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDI, MySettings);
+MIDI_NAMESPACE::SerialMIDI<Adafruit_USBD_MIDI> serial_usb_midi(usb_midi);
+MIDI_NAMESPACE::MidiInterface<MIDI_NAMESPACE::SerialMIDI<Adafruit_USBD_MIDI>, MySettings> MIDI(serial_usb_midi);
 
 #define NEOPIX_POW 11
 #define NEOPIX_PIN 12
