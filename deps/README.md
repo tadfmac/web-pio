@@ -1,21 +1,16 @@
-# web-pio / Deps
+# web-pio / deps
 
-## How to install dependencies
+## `excluded.txt`
 
-### 1. node modules
+This file lists the directories that should not be copied from chirimen-drivers.
 
-```
-cd web-pio
-npm i
-```
+## `/drivers`
 
-### 2. chirimen-drivers
+The files in the `/drivers` directory are checked weekly for updates to the [chirimen-drivers repository](https://github.com/chirimen-oh/chirimen-drivers), and any updates are automatically copied.
 
-```
-cd web-pio/deps
-bash ./install-chirimen-drivers.sh
-```
+## `/tmp`
 
-#### 3. last update
+These are files not sourced through chirimen-drivers, or drivers that have been modified independently.
 
-2025/06/11 20:19
+Since the I2C device drivers used by web-pio depend on chirimen-drivers, this directory also includes candidates for future pull requests to chirimen-drivers. In that case, these files will be removed from this directory after being merged into chirimen-drivers.
+
