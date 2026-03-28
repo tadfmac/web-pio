@@ -1,0 +1,97 @@
+name: Sync chirimen drivers
+
+on:
+  schedule:
+    - cron: "0 18 * * 6"  # 毎週 土曜 18:00 UTC = 日曜 03:00 JST
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout A (web-pio)
+        uses: actions/checkout@v4
+
+      - name: Get latest commit of B
+        id: get_b
+        run: |
+          echo "sha=$(git ls-remote https://github.com/chirimen-oh/chirimen-drivers.git HEAD | cut -f1)" >> $GITHUB_OUTPUT
+
+      - name: Read previous SHA
+        id: prev
+        run: |
+          if [ -f .b-dependency-version ]; then
+            echo "sha=$(cat .b-dependency-version)" >> $GITHUB_OUTPUT
+          else
+            echo "sha=HEAD~1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Clone B
+        run: |
+          git clone --depth=50 https://github.com/chirimen-oh/chirimen-drivers.git B
+
+      - name: Detect changes (packages only)
+        run: |
+          cd B
+          git fetch --depth=50 origin ${{ steps.get_b.outputs.sha }}
+
+          git diff --name-status ${{ steps.prev.outputs.sha }} ${{ steps.get_b.outputs.sha }} \
+            | grep "^.    packages/" \
+            | grep "/index.js" \
+            > ../changes.txt
+
+      - name: Extract target dirs
+        run: |
+          if [ ! -s changes.txt ]; then
+            echo "No changes"
+            exit 0
+          fi
+
+          # packages/AAA/index.js → AAA
+          awk '{print $1, $2}' changes.txt \
+            | sed 's#packages/##' \
+            | cut -d'/' -f1 \
+            | sort -u > all_dirs.txt
+
+          # 除外適用
+          grep -v -F -f deps/excluded.txt all_dirs.txt > target_dirs.txt || true
+
+          echo "=== TARGET DIRS ==="
+          cat target_dirs.txt || true
+
+      - name: Apply changes (copy & delete)
+        run: |
+          mkdir -p deps/drivers
+
+          while read dir; do
+            [ -z "$dir" ] && continue
+
+            status=$(grep "packages/$dir/index.js" changes.txt | head -n1 | cut -f1)
+
+            if [ "$status" = "D" ]; then
+              echo "Deleting $dir"
+              rm -f "deps/drivers/$dir.js"
+            else
+              if [ -f "B/packages/$dir/index.js" ]; then
+                echo "Updating $dir"
+                cp "B/packages/$dir/index.js" "deps/drivers/$dir.js"
+              fi
+            fi
+          done < target_dirs.txt
+
+      - name: Update version file
+        run: |
+          echo "${{ steps.get_b.outputs.sha }}" > .b-dependency-version
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: sync-chirimen-drivers
+          commit-message: "Sync drivers from chirimen-drivers"
+          title: "Sync drivers from chirimen-drivers"
+          body: |
+            Auto-sync from chirimen-drivers (/packages)
+
+            - includes add/update/delete
+            - excludes dirs from deps/excluded.txt
