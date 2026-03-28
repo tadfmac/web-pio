@@ -5,9 +5,6 @@ on:
     - cron: "0 18 * * 6"  # 日曜 03:00 JST
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 permissions:
   contents: write
   pull-requests: write
@@ -18,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout A (web-pio)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Get latest commit of B
         id: get_b
@@ -162,7 +159,7 @@ jobs:
       # PR作成
       # -------------------------------
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: sync-chirimen-drivers
           commit-message: "Sync drivers from chirimen-drivers"
