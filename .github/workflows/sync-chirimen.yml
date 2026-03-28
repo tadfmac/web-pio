@@ -154,6 +154,7 @@ jobs:
       # バージョン更新
       # -------------------------------
       - name: Update version file
+        if: env.skip != 'true'
         run: |
           echo "${{ steps.get_b.outputs.sha }}" > .b-dependency-version
 
