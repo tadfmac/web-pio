@@ -1,3 +1,5 @@
+// @ts-check
+
 // VL53L0X driver for CHIRIMEN WebI2C
 // 2018/11/21
 // Ported from
@@ -5,88 +7,94 @@
 // and https://github.com/bitbank2/VL53L0X/blob/master/tof.c (has longRangeModeBug?)
 // by Satoru Takagi
 
-var VL53L0X = function(i2cPort, slaveAddress, io_timeout_s) {
-  this.devConst = {
-    _SYSRANGE_START: 0x00,
-    _SYSTEM_THRESH_HIGH: 0x0c,
-    _SYSTEM_THRESH_LOW: 0x0e,
-    _SYSTEM_SEQUENCE_CONFIG: 0x01,
-    _SYSTEM_RANGE_CONFIG: 0x09,
-    _SYSTEM_INTERMEASUREMENT_PERIOD: 0x04,
-    _SYSTEM_INTERRUPT_CONFIG_GPIO: 0x0a,
-    _GPIO_HV_MUX_ACTIVE_HIGH: 0x84,
-    _SYSTEM_INTERRUPT_CLEAR: 0x0b,
-    _RESULT_INTERRUPT_STATUS: 0x13,
-    _RESULT_RANGE_STATUS: 0x14,
-    _RESULT_CORE_AMBIENT_WINDOW_EVENTS_RTN: 0xbc,
-    _RESULT_CORE_RANGING_TOTAL_EVENTS_RTN: 0xc0,
-    _RESULT_CORE_AMBIENT_WINDOW_EVENTS_REF: 0xd0,
-    _RESULT_CORE_RANGING_TOTAL_EVENTS_REF: 0xd4,
-    _RESULT_PEAK_SIGNAL_RATE_REF: 0xb6,
-    _ALGO_PART_TO_PART_RANGE_OFFSET_MM: 0x28,
-    _I2C_SLAVE_DEVICE_ADDRESS: 0x8a,
-    _MSRC_CONFIG_CONTROL: 0x60,
-    _PRE_RANGE_CONFIG_MIN_SNR: 0x27,
-    _PRE_RANGE_CONFIG_VALID_PHASE_LOW: 0x56,
-    _PRE_RANGE_CONFIG_VALID_PHASE_HIGH: 0x57,
-    _PRE_RANGE_MIN_COUNT_RATE_RTN_LIMIT: 0x64,
-    _FINAL_RANGE_CONFIG_MIN_SNR: 0x67,
-    _FINAL_RANGE_CONFIG_VALID_PHASE_LOW: 0x47,
-    _FINAL_RANGE_CONFIG_VALID_PHASE_HIGH: 0x48,
-    _FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT: 0x44,
-    _PRE_RANGE_CONFIG_SIGMA_THRESH_HI: 0x61,
-    _PRE_RANGE_CONFIG_SIGMA_THRESH_LO: 0x62,
-    _PRE_RANGE_CONFIG_VCSEL_PERIOD: 0x50,
-    _PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI: 0x51,
-    _PRE_RANGE_CONFIG_TIMEOUT_MACROP_LO: 0x52,
-    _SYSTEM_HISTOGRAM_BIN: 0x81,
-    _HISTOGRAM_CONFIG_INITIAL_PHASE_SELECT: 0x33,
-    _HISTOGRAM_CONFIG_READOUT_CTRL: 0x55,
-    _FINAL_RANGE_CONFIG_VCSEL_PERIOD: 0x70,
-    _FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI: 0x71,
-    _FINAL_RANGE_CONFIG_TIMEOUT_MACROP_LO: 0x72,
-    _CROSSTALK_COMPENSATION_PEAK_RATE_MCPS: 0x20,
-    _MSRC_CONFIG_TIMEOUT_MACROP: 0x46,
-    _SOFT_RESET_GO2_SOFT_RESET_N: 0xbf,
-    _IDENTIFICATION_MODEL_ID: 0xc0,
-    _IDENTIFICATION_REVISION_ID: 0xc2,
-    _OSC_CALIBRATE_VAL: 0xf8,
-    _GLOBAL_CONFIG_VCSEL_WIDTH: 0x32,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_0: 0xb0,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_1: 0xb1,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_2: 0xb2,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_3: 0xb3,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_4: 0xb4,
-    _GLOBAL_CONFIG_SPAD_ENABLES_REF_5: 0xb5,
-    _GLOBAL_CONFIG_REF_EN_START_SELECT: 0xb6,
-    _DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD: 0x4e,
-    _DYNAMIC_SPAD_REF_EN_START_OFFSET: 0x4f,
-    _POWER_MANAGEMENT_GO1_POWER_FORCE: 0x80,
-    _VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV: 0x89,
-    _ALGO_PHASECAL_LIM: 0x30,
-    _ALGO_PHASECAL_CONFIG_TIMEOUT: 0x30,
-    _VCSEL_PERIOD_PRE_RANGE: 0,
-    _VCSEL_PERIOD_FINAL_RANGE: 1
-  };
-  this.i2cPort = i2cPort;
-  this.i2cSlave = null;
-  if (slaveAddress) {
-    this.slaveAddress = slaveAddress;
-  } else {
-    this.slaveAddress = 0x29;
+class VL53L0X {
+  /**
+   * @constructor
+   * @param {import('node-web-i2c').I2CPort} i2cPort I2C port instance
+   * @param {number?} slaveAddress I2C slave address
+   */
+  constructor(i2cPort, slaveAddress, io_timeout_s) {
+    this.devConst = {
+      _SYSRANGE_START: 0x00,
+      _SYSTEM_THRESH_HIGH: 0x0c,
+      _SYSTEM_THRESH_LOW: 0x0e,
+      _SYSTEM_SEQUENCE_CONFIG: 0x01,
+      _SYSTEM_RANGE_CONFIG: 0x09,
+      _SYSTEM_INTERMEASUREMENT_PERIOD: 0x04,
+      _SYSTEM_INTERRUPT_CONFIG_GPIO: 0x0a,
+      _GPIO_HV_MUX_ACTIVE_HIGH: 0x84,
+      _SYSTEM_INTERRUPT_CLEAR: 0x0b,
+      _RESULT_INTERRUPT_STATUS: 0x13,
+      _RESULT_RANGE_STATUS: 0x14,
+      _RESULT_CORE_AMBIENT_WINDOW_EVENTS_RTN: 0xbc,
+      _RESULT_CORE_RANGING_TOTAL_EVENTS_RTN: 0xc0,
+      _RESULT_CORE_AMBIENT_WINDOW_EVENTS_REF: 0xd0,
+      _RESULT_CORE_RANGING_TOTAL_EVENTS_REF: 0xd4,
+      _RESULT_PEAK_SIGNAL_RATE_REF: 0xb6,
+      _ALGO_PART_TO_PART_RANGE_OFFSET_MM: 0x28,
+      _I2C_SLAVE_DEVICE_ADDRESS: 0x8a,
+      _MSRC_CONFIG_CONTROL: 0x60,
+      _PRE_RANGE_CONFIG_MIN_SNR: 0x27,
+      _PRE_RANGE_CONFIG_VALID_PHASE_LOW: 0x56,
+      _PRE_RANGE_CONFIG_VALID_PHASE_HIGH: 0x57,
+      _PRE_RANGE_MIN_COUNT_RATE_RTN_LIMIT: 0x64,
+      _FINAL_RANGE_CONFIG_MIN_SNR: 0x67,
+      _FINAL_RANGE_CONFIG_VALID_PHASE_LOW: 0x47,
+      _FINAL_RANGE_CONFIG_VALID_PHASE_HIGH: 0x48,
+      _FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT: 0x44,
+      _PRE_RANGE_CONFIG_SIGMA_THRESH_HI: 0x61,
+      _PRE_RANGE_CONFIG_SIGMA_THRESH_LO: 0x62,
+      _PRE_RANGE_CONFIG_VCSEL_PERIOD: 0x50,
+      _PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI: 0x51,
+      _PRE_RANGE_CONFIG_TIMEOUT_MACROP_LO: 0x52,
+      _SYSTEM_HISTOGRAM_BIN: 0x81,
+      _HISTOGRAM_CONFIG_INITIAL_PHASE_SELECT: 0x33,
+      _HISTOGRAM_CONFIG_READOUT_CTRL: 0x55,
+      _FINAL_RANGE_CONFIG_VCSEL_PERIOD: 0x70,
+      _FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI: 0x71,
+      _FINAL_RANGE_CONFIG_TIMEOUT_MACROP_LO: 0x72,
+      _CROSSTALK_COMPENSATION_PEAK_RATE_MCPS: 0x20,
+      _MSRC_CONFIG_TIMEOUT_MACROP: 0x46,
+      _SOFT_RESET_GO2_SOFT_RESET_N: 0xbf,
+      _IDENTIFICATION_MODEL_ID: 0xc0,
+      _IDENTIFICATION_REVISION_ID: 0xc2,
+      _OSC_CALIBRATE_VAL: 0xf8,
+      _GLOBAL_CONFIG_VCSEL_WIDTH: 0x32,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_0: 0xb0,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_1: 0xb1,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_2: 0xb2,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_3: 0xb3,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_4: 0xb4,
+      _GLOBAL_CONFIG_SPAD_ENABLES_REF_5: 0xb5,
+      _GLOBAL_CONFIG_REF_EN_START_SELECT: 0xb6,
+      _DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD: 0x4e,
+      _DYNAMIC_SPAD_REF_EN_START_OFFSET: 0x4f,
+      _POWER_MANAGEMENT_GO1_POWER_FORCE: 0x80,
+      _VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV: 0x89,
+      _ALGO_PHASECAL_LIM: 0x30,
+      _ALGO_PHASECAL_CONFIG_TIMEOUT: 0x30,
+      _VCSEL_PERIOD_PRE_RANGE: 0,
+      _VCSEL_PERIOD_FINAL_RANGE: 1,
+    };
+    this.i2cPort = i2cPort;
+    this.i2cSlave = null;
+    if (slaveAddress) {
+      this.slaveAddress = slaveAddress;
+    } else {
+      this.slaveAddress = 0x29;
+    }
+    if (io_timeout_s) {
+      this.io_timeout_s = io_timeout_s;
+    } else {
+      this.io_timeout_s = 0;
+    }
   }
-  if (io_timeout_s) {
-    this.io_timeout_s = io_timeout_s;
-  } else {
-    this.io_timeout_s = 0;
-  }
-};
 
-VL53L0X.prototype = {
-  _decode_timeout: function(val) {
+  _decode_timeout(val) {
     return (val & 0xff) * Math.pow(2.0, (val & 0xff00) >> 8) + 1;
-  },
-  _encode_timeout: function(mclks) {
+  }
+
+  _encode_timeout(mclks) {
     var timeout_mclks = mclks & 0xffff;
     var ls_byte = 0;
     var ms_byte = 0;
@@ -100,8 +108,9 @@ VL53L0X.prototype = {
     } else {
       return 0;
     }
-  },
-  init: async function(longRangeMode) {
+  }
+
+  async init(longRangeMode) {
     this.i2cSlave = await this.i2cPort.open(this.slaveAddress);
     var dc = this.devConst;
     var init1 = [
@@ -184,7 +193,7 @@ VL53L0X.prototype = {
       [0x8e, 0x01],
       [0x00, 0x01],
       [0xff, 0x00],
-      [0x80, 0x00]
+      [0x80, 0x00],
     ];
     // await this.i2cSlave.read8(ra);
     // await this.i2cSlave.write8(wa,wd);
@@ -228,7 +237,7 @@ VL53L0X.prototype = {
     ref_spad_map[0] = dc._GLOBAL_CONFIG_SPAD_ENABLES_REF_0;
     for (let i = 0; i < 6; i++) {
       ref_spad_map[i + 1] = await this.i2cSlave.read8(
-        dc._GLOBAL_CONFIG_SPAD_ENABLES_REF_0 + i
+        dc._GLOBAL_CONFIG_SPAD_ENABLES_REF_0 + i,
       );
     }
     await this.i2cSlave.write8(0xff, 0x01);
@@ -248,8 +257,11 @@ VL53L0X.prototype = {
         // This bit is lower than the first one that should be enabled,
         // or (reference_spad_count) bits have already been enabled, so
         // zero this bit.
-        ref_spad_map[1 + Math.floor(i / 8)] &= ~(1 << i % 8);
-      } else if (((ref_spad_map[1 + Math.floor(i / 8)] >> i % 8) & 0x01) > 0) {
+        ref_spad_map[1 + Math.floor(i / 8)] &= ~(1 << (i % 8));
+      } else if (
+        ((ref_spad_map[1 + Math.floor(i / 8)] >> (i % 8)) & 0x01) >
+        0
+      ) {
         spads_enabled += 1;
       }
     }
@@ -263,17 +275,18 @@ VL53L0X.prototype = {
 
     await this.i2cSlave.write8(dc._SYSTEM_INTERRUPT_CONFIG_GPIO, 0x04);
     var gpio_hv_mux_active_high = await this.i2cSlave.read8(
-      dc._GPIO_HV_MUX_ACTIVE_HIGH
+      dc._GPIO_HV_MUX_ACTIVE_HIGH,
     );
     await this.i2cSlave.write8(
       dc._GPIO_HV_MUX_ACTIVE_HIGH,
-      gpio_hv_mux_active_high & ~0x10
+      gpio_hv_mux_active_high & ~0x10,
     ); // active low
     await this.i2cSlave.write8(dc._SYSTEM_INTERRUPT_CLEAR, 0x01);
-    this._measurement_timing_budget_us = await this.get_measurement_timing_budget();
+    this._measurement_timing_budget_us =
+      await this.get_measurement_timing_budget();
     await this.i2cSlave.write8(dc._SYSTEM_SEQUENCE_CONFIG, 0xe8);
     await this.set_measurement_timing_budget(
-      this._measurement_timing_budget_us
+      this._measurement_timing_budget_us,
     );
     await this.i2cSlave.write8(dc._SYSTEM_SEQUENCE_CONFIG, 0x01);
     await this._perform_single_ref_calibration(0x40);
@@ -288,9 +301,9 @@ VL53L0X.prototype = {
       await this.setVcselPulsePeriod("VcselPeriodPreRange", 18);
       await this.setVcselPulsePeriod("VcselPeriodFinalRange", 14);
     }
+  }
 
-  },
-  getRange: async function() {
+  async getRange() {
     // Perform a single reading of the range for an object in front of
     // the sensor and return the distance in millimeters.
 
@@ -322,13 +335,14 @@ VL53L0X.prototype = {
     var range_mm = await this._read_u16(dc._RESULT_RANGE_STATUS + 10);
     await this.i2cSlave.write8(dc._SYSTEM_INTERRUPT_CLEAR, 0x01);
     return range_mm;
-  },
-  _perform_single_ref_calibration: async function(vhv_init_byte) {
+  }
+
+  async _perform_single_ref_calibration(vhv_init_byte) {
     // based on VL53L0X_perform_single_ref_calibration() from ST API.
     var dc = this.devConst;
     await this.i2cSlave.write8(
       dc._SYSRANGE_START,
-      0x01 | (vhv_init_byte & 0xff)
+      0x01 | (vhv_init_byte & 0xff),
     );
     var ris = (await this.i2cSlave.read8(dc._RESULT_INTERRUPT_STATUS)) & 0x07;
     while (ris == 0x00) {
@@ -337,8 +351,9 @@ VL53L0X.prototype = {
     }
     await this.i2cSlave.write8(dc._SYSTEM_INTERRUPT_CLEAR, 0x01);
     await this.i2cSlave.write8(dc._SYSRANGE_START, 0x00);
-  },
-  get_measurement_timing_budget: async function() {
+  }
+
+  async get_measurement_timing_budget() {
     // The measurement timing budget in microseconds.
     var budget_us = 1910 + 960; // Start overhead + end overhead.
     var sse = await this._get_sequence_step_enables(); // tcc, dss, msrc, pre_range, final_range
@@ -360,8 +375,9 @@ VL53L0X.prototype = {
     }
     this._measurement_timing_budget_us = budget_us;
     return budget_us;
-  },
-  set_measurement_timing_budget: async function(budget_us) {
+  }
+
+  async set_measurement_timing_budget(budget_us) {
     var dc = this.devConst;
     if (budget_us < 20000) {
       console.error("ERROR :", budget_us);
@@ -397,28 +413,30 @@ VL53L0X.prototype = {
       var final_range_timeout_us = budget_us - used_budget_us;
       var final_range_timeout_mclks = this._timeout_microseconds_to_mclks(
         final_range_timeout_us,
-        st.final_range_vcsel_period_pclks
+        st.final_range_vcsel_period_pclks,
       );
       if (sse.pre_range) {
         final_range_timeout_mclks += st.pre_range_mclks;
       }
       await this._write_u16(
         dc._FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
-        this._encode_timeout(final_range_timeout_mclks)
+        this._encode_timeout(final_range_timeout_mclks),
       );
       this._measurement_timing_budget_us = budget_us;
     }
-  },
-  get_signal_rate_limit: async function() {
+  }
+
+  async get_signal_rate_limit() {
     //The signal rate limit in mega counts per second.
     var dc = this.devConst;
     var val = await this._read_u16(
-      dc._FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT
+      dc._FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT,
     );
     // Return value converted from 16-bit 9.7 fixed point to float.
     return val / (1 << 7);
-  },
-  set_signal_rate_limit: async function(val) {
+  }
+
+  async set_signal_rate_limit(val) {
     var dc = this.devConst;
     if (0.0 <= val && val <= 511.99) {
       // OK
@@ -429,8 +447,9 @@ VL53L0X.prototype = {
     // Convert to 16-bit 9.7 fixed point value from a float.
     val = Math.floor(val * (1 << 7));
     await this._write_u16(dc._FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, val);
-  },
-  _get_sequence_step_enables: async function() {
+  }
+
+  async _get_sequence_step_enables() {
     // based on VL53L0X_GetSequenceStepEnables() from ST API
     var dc = this.devConst;
     var sequence_config = await this.i2cSlave.read8(dc._SYSTEM_SEQUENCE_CONFIG);
@@ -444,52 +463,54 @@ VL53L0X.prototype = {
       dss: dss,
       msrc: msrc,
       pre_range: pre_range,
-      final_range: final_range
+      final_range: final_range,
     };
-  },
-  _get_sequence_step_timeouts: async function(pre_range) {
+  }
+
+  async _get_sequence_step_timeouts(pre_range) {
     // based on get_sequence_step_timeout() from ST API but modified by
     // pololu here:
     //   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
     var dc = this.devConst;
     var pre_range_vcsel_period_pclks = await this._get_vcsel_pulse_period(
-      dc._VCSEL_PERIOD_PRE_RANGE
+      dc._VCSEL_PERIOD_PRE_RANGE,
     );
     var msrc_dss_tcc_mclks =
       ((await this.i2cSlave.read8(dc._MSRC_CONFIG_TIMEOUT_MACROP)) + 1) & 0xff;
     var msrc_dss_tcc_us = this._timeout_mclks_to_microseconds(
       msrc_dss_tcc_mclks,
-      pre_range_vcsel_period_pclks
+      pre_range_vcsel_period_pclks,
     );
     var pre_range_mclks = this._decode_timeout(
-      await this._read_u16(dc._PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI)
+      await this._read_u16(dc._PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI),
     );
     var pre_range_us = this._timeout_mclks_to_microseconds(
       pre_range_mclks,
-      pre_range_vcsel_period_pclks
+      pre_range_vcsel_period_pclks,
     );
     var final_range_vcsel_period_pclks = await this._get_vcsel_pulse_period(
-      dc._VCSEL_PERIOD_FINAL_RANGE
+      dc._VCSEL_PERIOD_FINAL_RANGE,
     );
     var final_range_mclks = this._decode_timeout(
-      await this._read_u16(dc._FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI)
+      await this._read_u16(dc._FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI),
     );
     if (pre_range) {
       final_range_mclks -= pre_range_mclks;
     }
     var final_range_us = this._timeout_mclks_to_microseconds(
       final_range_mclks,
-      final_range_vcsel_period_pclks
+      final_range_vcsel_period_pclks,
     );
     return {
       msrc_dss_tcc_us: msrc_dss_tcc_us,
       pre_range_us: pre_range_us,
       final_range_us: final_range_us,
       final_range_vcsel_period_pclks: final_range_vcsel_period_pclks,
-      pre_range_mclks: pre_range_mclks
+      pre_range_mclks: pre_range_mclks,
     };
-  },
-  _get_vcsel_pulse_period: async function(vcsel_period_type) {
+  }
+
+  async _get_vcsel_pulse_period(vcsel_period_type) {
     // Disable should be removed when refactor can be tested
     var dc = this.devConst;
     var val;
@@ -501,33 +522,30 @@ VL53L0X.prototype = {
       return ((val + 1) & 0xff) << 1;
     }
     return 255;
-  },
-  _timeout_mclks_to_microseconds: function(
-    timeout_period_mclks,
-    vcsel_period_pclks
-  ) {
+  }
+
+  _timeout_mclks_to_microseconds(timeout_period_mclks, vcsel_period_pclks) {
     var macro_period_ns = Math.floor(
-      (2304 * vcsel_period_pclks * 1655 + 500) / 1000
+      (2304 * vcsel_period_pclks * 1655 + 500) / 1000,
     );
     return Math.floor(
       (timeout_period_mclks * macro_period_ns +
         Math.floor(macro_period_ns / 2)) /
-        1000
+        1000,
     );
-  },
-  _timeout_microseconds_to_mclks: function(
-    timeout_period_us,
-    vcsel_period_pclks
-  ) {
+  }
+
+  _timeout_microseconds_to_mclks(timeout_period_us, vcsel_period_pclks) {
     var macro_period_ns = Math.floor(
-      (2304 * vcsel_period_pclks * 1655 + 500) / 1000
+      (2304 * vcsel_period_pclks * 1655 + 500) / 1000,
     );
     return (
       Math.floor(timeout_period_us * 1000 + Math.floor(macro_period_ns / 2)) /
       macro_period_ns
     );
-  },
-  _get_spad_info: async function() {
+  }
+
+  async _get_spad_info() {
     // # Get reference SPAD count and type, returned as a 2-tuple of
     // # count and boolean is_aperture.  Based on code from:
     // #   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
@@ -563,20 +581,23 @@ VL53L0X.prototype = {
     await this.i2cSlave.write8(0x80, 0x00);
 
     return { spad_count: count, spad_is_aperture: is_aperture };
-  },
-  _read_u16: async function(address) {
+  }
+
+  async _read_u16(address) {
     // Read a 16-bit BE unsigned value from the specified 8-bit address.
     return (
       ((await this.i2cSlave.read8(address)) << 8) |
       (await this.i2cSlave.read8(address + 1))
     );
-  },
-  _write_u16: async function(address, val) {
+  }
+
+  async _write_u16(address, val) {
     // Write a 16-bit BE unsigned value to the specified 8-bit address.
     await this.i2cSlave.write8(address, (val >> 8) & 0xff);
     await this.i2cSlave.write8(address + 1, val & 0xff);
-  },
-  read: async function() {
+  }
+
+  async read() {
     if (this.i2cSlave == null) {
       throw Error("i2cSlave Address does'nt yet open!");
     }
@@ -584,11 +605,13 @@ VL53L0X.prototype = {
     var LSB = await this.i2cSlave.read8(0x01);
     var data = ((MSB << 8) + LSB) / 128.0;
     return data;
-  },
-  getSVal: function (val) {
+  }
+
+  getSVal(val) {
     return new Int16Array([val])[0];
-  },
-  setVcselPulsePeriod: async function(vcselPeriodType, period_pclks) {
+  }
+
+  async setVcselPulsePeriod(vcselPeriodType, period_pclks) {
     // for longRangeMode init()
     // ported from https://github.com/bitbank2/VL53L0X/blob/master/tof.c
     //
@@ -624,25 +647,25 @@ VL53L0X.prototype = {
         case 12:
           await this.i2cSlave.write8(
             dc._PRE_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x18
+            0x18,
           );
           break;
         case 14:
           await this.i2cSlave.write8(
             dc._PRE_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x30
+            0x30,
           );
           break;
         case 16:
           await this.i2cSlave.write8(
             dc._PRE_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x40
+            0x40,
           );
           break;
         case 18:
           await this.i2cSlave.write8(
             dc._PRE_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x50
+            0x50,
           );
           break;
         default:
@@ -653,29 +676,29 @@ VL53L0X.prototype = {
       // apply new VCSEL period
       await this.i2cSlave.write8(
         dc._PRE_RANGE_CONFIG_VCSEL_PERIOD,
-        vcsel_period_reg
+        vcsel_period_reg,
       );
       // update timeouts
       // set_sequence_step_timeout() begin
       // (SequenceStepId == VL53L0X_SEQUENCESTEP_PRE_RANGE)
       var new_pre_range_timeout_mclks = this._timeout_microseconds_to_mclks(
         st.pre_range_us,
-        period_pclks
+        period_pclks,
       );
       await this._write_u16(
         dc._PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI,
-        this._encode_timeout(new_pre_range_timeout_mclks)
+        this._encode_timeout(new_pre_range_timeout_mclks),
       );
       // set_sequence_step_timeout() end
       // set_sequence_step_timeout() begin
       // (SequenceStepId == VL53L0X_SEQUENCESTEP_MSRC)
       var new_msrc_timeout_mclks = this._timeout_microseconds_to_mclks(
         st.msrc_dss_tcc_us,
-        period_pclks
+        period_pclks,
       );
       await this.i2cSlave.write8(
         dc._MSRC_CONFIG_TIMEOUT_MACROP,
-        new_msrc_timeout_mclks > 256 ? 255 : new_msrc_timeout_mclks - 1
+        new_msrc_timeout_mclks > 256 ? 255 : new_msrc_timeout_mclks - 1,
       );
 
       // set_sequence_step_timeout() end
@@ -684,11 +707,11 @@ VL53L0X.prototype = {
         case 8:
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x10
+            0x10,
           );
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_LOW,
-            0x08
+            0x08,
           );
           await this.i2cSlave.write8(dc._GLOBAL_CONFIG_VCSEL_WIDTH, 0x02);
           await this.i2cSlave.write8(dc._ALGO_PHASECAL_CONFIG_TIMEOUT, 0x0c);
@@ -699,11 +722,11 @@ VL53L0X.prototype = {
         case 10:
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x28
+            0x28,
           );
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_LOW,
-            0x08
+            0x08,
           );
           await this.i2cSlave.write8(dc._GLOBAL_CONFIG_VCSEL_WIDTH, 0x03);
           await this.i2cSlave.write8(dc._ALGO_PHASECAL_CONFIG_TIMEOUT, 0x09);
@@ -714,11 +737,11 @@ VL53L0X.prototype = {
         case 12:
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x38
+            0x38,
           );
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_LOW,
-            0x08
+            0x08,
           );
           await this.i2cSlave.write8(dc._GLOBAL_CONFIG_VCSEL_WIDTH, 0x03);
           await this.i2cSlave.write8(dc._ALGO_PHASECAL_CONFIG_TIMEOUT, 0x08);
@@ -729,11 +752,11 @@ VL53L0X.prototype = {
         case 14:
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_HIGH,
-            0x48
+            0x48,
           );
           await this.i2cSlave.write8(
             dc._FINAL_RANGE_CONFIG_VALID_PHASE_LOW,
-            0x08
+            0x08,
           );
           await this.i2cSlave.write8(dc._GLOBAL_CONFIG_VCSEL_WIDTH, 0x03);
           await this.i2cSlave.write8(dc._ALGO_PHASECAL_CONFIG_TIMEOUT, 0x07);
@@ -748,7 +771,7 @@ VL53L0X.prototype = {
       // apply new VCSEL period
       await this.i2cSlave.write8(
         dc._FINAL_RANGE_CONFIG_VCSEL_PERIOD,
-        vcsel_period_reg
+        vcsel_period_reg,
       );
       // update timeouts
       // set_sequence_step_timeout() begin
@@ -759,14 +782,14 @@ VL53L0X.prototype = {
       //  because they have different vcsel periods."
       var new_final_range_timeout_mclks = this._timeout_microseconds_to_mclks(
         st.final_range_us,
-        period_pclks
+        period_pclks,
       );
       if (enables & dc._SEQUENCE_ENABLE_PRE_RANGE) {
         new_final_range_timeout_mclks += st.pre_range_mclks;
       }
       await this._write_u16(
         dc._FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
-        this._encode_timeout(new_final_range_timeout_mclks)
+        this._encode_timeout(new_final_range_timeout_mclks),
       );
       // set_sequence_step_timeout end
     } else {
@@ -776,7 +799,7 @@ VL53L0X.prototype = {
 
     // "Finally, the timing budget must be re-applied"
     await this.set_measurement_timing_budget(
-      this._measurement_timing_budget_us
+      this._measurement_timing_budget_us,
     );
 
     // "Perform the phase calibration. This is needed after changing on vcsel period."
@@ -790,12 +813,13 @@ VL53L0X.prototype = {
     // VL53L0X_perform_phase_calibration() end
 
     return true;
-  },
-  sleep: function(ms) {
-    return new Promise(function(resolve) {
+  }
+
+  sleep(ms) {
+    return new Promise(function (resolve) {
       setTimeout(resolve, ms);
     });
   }
-};
+}
 
 export default VL53L0X;
