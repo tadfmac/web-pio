@@ -2,8 +2,11 @@ name: Sync chirimen drivers
 
 on:
   schedule:
-    - cron: "0 18 * * 6"  # 毎週 土曜 18:00 UTC = 日曜 03:00 JST
+    - cron: "0 18 * * 6"  # 日曜 03:00 JST
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   sync:
@@ -27,36 +30,50 @@ jobs:
             echo "sha=none" >> $GITHUB_OUTPUT
           fi
 
-      - name: Clone B
+      - name: Clone B (full clone for safety)
         run: |
           git clone https://github.com/chirimen-oh/chirimen-drivers.git B
 
       # -------------------------------
-      # 初回判定（existsの代替）
+      # 初回判定
       # -------------------------------
       - name: Check first run
         id: first
         run: |
-          if [ ! -f .b-dependency-version ]; then
+          if [ "${{ steps.prev.outputs.sha }}" = "none" ]; then
             echo "first=true" >> $GITHUB_OUTPUT
           else
             echo "first=false" >> $GITHUB_OUTPUT
           fi
 
       # -------------------------------
-      # 初回フル同期（上書きのみ）
+      # SHA存在チェック（重要）
       # -------------------------------
-      - name: First run full sync (overwrite only)
-        if: steps.first.outputs.first == 'true'
+      - name: Validate previous SHA
+        id: validate
         run: |
-          echo "=== FIRST RUN: FULL SYNC ==="
+          cd B
+          if [ "${{ steps.prev.outputs.sha }}" = "none" ]; then
+            echo "valid=false" >> $GITHUB_OUTPUT
+          elif git cat-file -e ${{ steps.prev.outputs.sha }}^{commit} 2>/dev/null; then
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "valid=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -------------------------------
+      # 初回 or fallback フル同期
+      # -------------------------------
+      - name: Full sync (first or fallback)
+        if: steps.first.outputs.first == 'true' || steps.validate.outputs.valid == 'false'
+        run: |
+          echo "=== FULL SYNC MODE ==="
 
           mkdir -p deps/drivers
 
           for dir in B/packages/*; do
             name=$(basename "$dir")
 
-            # 除外チェック
             if grep -qx "$name" deps/excluded.txt 2>/dev/null; then
               echo "Skip $name"
               continue
@@ -69,22 +86,20 @@ jobs:
           done
 
       # -------------------------------
-      # 差分検知（2回目以降のみ）
+      # 差分検知
       # -------------------------------
       - name: Detect changes
-        if: steps.first.outputs.first == 'false'
+        if: steps.first.outputs.first == 'false' && steps.validate.outputs.valid == 'true'
         run: |
           cd B
 
-          git fetch --depth=50 origin ${{ steps.get_b.outputs.sha }}
-
           git diff --name-status ${{ steps.prev.outputs.sha }} ${{ steps.get_b.outputs.sha }} \
-            | grep "^.    packages/" \
+            | grep "^.  packages/" \
             | grep "/index.js" \
             > ../changes.txt || true
 
       - name: Extract target dirs
-        if: steps.first.outputs.first == 'false'
+        if: steps.first.outputs.first == 'false' && steps.validate.outputs.valid == 'true'
         run: |
           if [ ! -s changes.txt ]; then
             echo "No changes"
@@ -106,7 +121,7 @@ jobs:
       # 差分適用（追加・更新・削除）
       # -------------------------------
       - name: Apply changes
-        if: steps.first.outputs.first == 'false' && env.skip != 'true'
+        if: steps.first.outputs.first == 'false' && steps.validate.outputs.valid == 'true' && env.skip != 'true'
         run: |
           mkdir -p deps/drivers
 
@@ -145,7 +160,7 @@ jobs:
           body: |
             Auto-sync from chirimen-drivers (/packages)
 
-            - Weekly sync (Sunday midnight JST)
+            - Weekly sync (Sunday 03:00 JST)
             - Includes add/update/delete
-            - First run = full overwrite
+            - Fallback to full sync if history mismatch
             - Excludes dirs from deps/excluded.txt
