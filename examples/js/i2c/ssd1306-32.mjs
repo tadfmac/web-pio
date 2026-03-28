@@ -17,6 +17,9 @@ async function onFound(devices) {
   const oledDisplay = new OledDisplay(port, 0x3c);
   await oledDisplay.init("SSD1306",128,32);
   oledDisplay.clearDisplayQ();
-  oledDisplay.drawStringQ(0, 0, "SSD1306 128x32");
+  oledDisplay.drawStringQ(0, 0, "SSD1306 128x32 A");
+  oledDisplay.drawStringQ(1, 0, "SSD1306 128x32 B");
+  oledDisplay.drawStringQ(2, 0, "SSD1306 128x32 C");
+  oledDisplay.drawStringQ(3, 0, "SSD1306 128x32 D");
   await oledDisplay.playSequence();
 }

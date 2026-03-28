@@ -138,11 +138,14 @@ class OledDisplay {
     this.useSSD1315 = false;
     this.displayWidth = 128;
     this.displayHeight = 64;
+    this.columnOffset = 0;
+    this.comPins = null;  // null = auto (height-based default)
   }
 
   #initQ() {
-    // COM Pins Hardware Configuration: 0x12 for 64-row, 0x02 for others
-    const comPins = (this.displayHeight === 64) ? 0x12 : 0x02;
+    // COM Pins Hardware Configuration: 0x12 for >32 rows (alternative), 0x02 for ≤32 rows (sequential)
+    // Can be overridden via init() options
+    const comPins = (this.comPins !== null) ? this.comPins : ((this.displayHeight > 32) ? 0x12 : 0x02);
     if (this.useSSD1315) {
       this.#registerQueue(OLED_CONST.commandMode, OLED_CONST.displayOffCmd);      // 0xae
       this.#registerQueue(OLED_CONST.commandMode, 0xd5);  // Set Display Clock Divide Ratio
@@ -156,8 +159,8 @@ class OledDisplay {
       this.#registerQueue(OLED_CONST.commandMode, OLED_CONST.chargePumpEnableCmd);  // 0x14
       this.#registerQueue(OLED_CONST.commandMode, 0x20);  // Set Memory Addressing Mode
       this.#registerQueue(OLED_CONST.commandMode, 0x02);  // Page mode
-      this.#registerQueue(OLED_CONST.commandMode, 0xa1);  // Set Segment Re-map
-      this.#registerQueue(OLED_CONST.commandMode, 0xc8);  // Set COM Output Scan Direction
+      this.#registerQueue(OLED_CONST.commandMode, 0xa0);  // Set Segment Re-map (SEG0→col0)
+      this.#registerQueue(OLED_CONST.commandMode, 0xc0);  // Set COM Output Scan Direction (COM0→row0)
       this.#registerQueue(OLED_CONST.commandMode, 0xda);  // Set COM Pins Hardware Configuration
       this.#registerQueue(OLED_CONST.commandMode, comPins);
       this.#registerQueue(OLED_CONST.commandMode, OLED_CONST.setBrightnessCmd);    // 0x81
@@ -239,12 +242,10 @@ class OledDisplay {
   }
 
   setTextXYQ(row, col) {
+    const colAddr = this.columnOffset + (8 * col);
     this.#registerQueue(OLED_CONST.commandMode, 0xb0 + row);
-    this.#registerQueue(OLED_CONST.commandMode, 0x00 + ((8 * col) & 0x0f));
-    this.#registerQueue(
-      OLED_CONST.commandMode,
-      0x10 + (((8 * col) >> 4) & 0x0f)
-    );
+    this.#registerQueue(OLED_CONST.commandMode, 0x00 + (colAddr & 0x0f));
+    this.#registerQueue(OLED_CONST.commandMode, 0x10 + ((colAddr >> 4) & 0x0f));
   }
 
   clearLineQ(row) {
@@ -261,10 +262,10 @@ class OledDisplay {
     // 水平アドレッシングモードに切り替え（ページ切替コマンドなしで全画面連続書き込み）
     this.#registerQueue(OLED_CONST.commandMode, 0x20);
     this.#registerQueue(OLED_CONST.commandMode, 0x00);
-    // カラムアドレス範囲: 0 〜 displayWidth-1
+    // カラムアドレス範囲: columnOffset 〜 columnOffset+displayWidth-1
     this.#registerQueue(OLED_CONST.commandMode, 0x21);
-    this.#registerQueue(OLED_CONST.commandMode, 0x00);
-    this.#registerQueue(OLED_CONST.commandMode, this.displayWidth - 1);
+    this.#registerQueue(OLED_CONST.commandMode, this.columnOffset);
+    this.#registerQueue(OLED_CONST.commandMode, this.columnOffset + this.displayWidth - 1);
     // ページアドレス範囲: 0 〜 pages-1
     this.#registerQueue(OLED_CONST.commandMode, 0x22);
     this.#registerQueue(OLED_CONST.commandMode, 0x00);
@@ -288,23 +289,36 @@ class OledDisplay {
     this.funcQueue.push(obj);
   }
 
-  async init(deviceType, width, height) {
-    if (deviceType === true) {
-      // backward compat: SSD1306 + 128x64, size params ignored
+  async init(deviceTypeOrOptions, width, height, columnOffset, comPins) {
+    if (deviceTypeOrOptions !== null && typeof deviceTypeOrOptions === 'object') {
+      // Object form: init({ device, width, height, offset, isAlternate })
+      const { device, width: w, height: h, offset, isAlternate } = deviceTypeOrOptions;
+      if (device === "SSD1306") {
+        this.useSSD1306 = true;
+      } else if (device === "SSD1315") {
+        this.useSSD1315 = true;
+      }
+      if (w) this.displayWidth = w;
+      if (h) this.displayHeight = h;
+      if (offset !== undefined) this.columnOffset = offset;
+      if (isAlternate === true) this.comPins = 0x12;
+      // isAlternate false/undefined → comPins stays null (auto / height-based)
+    } else if (deviceTypeOrOptions === true) {
+      // backward compat: init(true) → SSD1306, 128x64
       this.useSSD1306 = true;
     } else {
-      if (deviceType === "SSD1306") {
+      // Positional form: init(device?, width?, height?, columnOffset?, comPins?)
+      if (deviceTypeOrOptions === "SSD1306") {
         this.useSSD1306 = true;
-      } else if (deviceType === "SSD1315") {
+      } else if (deviceTypeOrOptions === "SSD1315") {
         this.useSSD1315 = true;
       }
       // else: default SSD1308 (useSSD1306/useSSD1315 both false)
-      if (width) {
-        this.displayWidth = width;
-      }
-      if (height) {
-        this.displayHeight = height;
-      }
+      if (width) this.displayWidth = width;
+      if (height) this.displayHeight = height;
+      if (columnOffset !== undefined) this.columnOffset = columnOffset;
+      if (comPins === true) this.comPins = 0x12;
+      // comPins false/undefined → comPins stays null (auto / height-based)
     }
     this.i2cSlave = await this.i2cPort.open(this.slaveAddress);
     this.#initQ();
