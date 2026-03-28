@@ -8,6 +8,10 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -79,8 +83,11 @@ jobs:
               continue
             fi
 
-            if [ -f "$dir/index.js" ]; then
+            if [ -f "$dir/$name.js" ]; then
               echo "Overwrite $name"
+              cp -f "$dir/$name.js" "deps/drivers/$name.js"
+            elif [ -f "$dir/index.js" ]; then
+              echo "Overwrite $name (index.js)"
               cp -f "$dir/index.js" "deps/drivers/$name.js"
             fi
           done
@@ -94,8 +101,7 @@ jobs:
           cd B
 
           git diff --name-status ${{ steps.prev.outputs.sha }} ${{ steps.get_b.outputs.sha }} \
-            | grep "^.  packages/" \
-            | grep "/index.js" \
+            | grep $'^.\tpackages/' \
             > ../changes.txt || true
 
       - name: Extract target dirs
@@ -107,7 +113,7 @@ jobs:
             exit 0
           fi
 
-          awk '{print $1, $2}' changes.txt \
+          cut -f2 changes.txt \
             | sed 's#packages/##' \
             | cut -d'/' -f1 \
             | sort -u > all_dirs.txt
@@ -128,14 +134,17 @@ jobs:
           while read dir; do
             [ -z "$dir" ] && continue
 
-            status=$(grep "packages/$dir/index.js" changes.txt | head -n1 | cut -f1)
+            status=$(grep $'\tpackages/'"$dir"'/' changes.txt | head -n1 | cut -f1)
 
             if [ "$status" = "D" ]; then
               echo "Deleting $dir"
               rm -f "deps/drivers/$dir.js"
             else
-              if [ -f "B/packages/$dir/index.js" ]; then
+              if [ -f "B/packages/$dir/$dir.js" ]; then
                 echo "Updating $dir"
+                cp -f "B/packages/$dir/$dir.js" "deps/drivers/$dir.js"
+              elif [ -f "B/packages/$dir/index.js" ]; then
+                echo "Updating $dir (index.js)"
                 cp -f "B/packages/$dir/index.js" "deps/drivers/$dir.js"
               fi
             fi
