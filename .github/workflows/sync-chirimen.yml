@@ -24,43 +24,89 @@ jobs:
           if [ -f .b-dependency-version ]; then
             echo "sha=$(cat .b-dependency-version)" >> $GITHUB_OUTPUT
           else
-            echo "sha=HEAD~1" >> $GITHUB_OUTPUT
+            echo "sha=none" >> $GITHUB_OUTPUT
           fi
 
       - name: Clone B
         run: |
           git clone --depth=50 https://github.com/chirimen-oh/chirimen-drivers.git B
 
-      - name: Detect changes (packages only)
+      # -------------------------------
+      # 初回判定（existsの代替）
+      # -------------------------------
+      - name: Check first run
+        id: first
+        run: |
+          if [ ! -f .b-dependency-version ]; then
+            echo "first=true" >> $GITHUB_OUTPUT
+          else
+            echo "first=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -------------------------------
+      # 初回フル同期（上書きのみ）
+      # -------------------------------
+      - name: First run full sync (overwrite only)
+        if: steps.first.outputs.first == 'true'
+        run: |
+          echo "=== FIRST RUN: FULL SYNC ==="
+
+          mkdir -p deps/drivers
+
+          for dir in B/packages/*; do
+            name=$(basename "$dir")
+
+            # 除外チェック
+            if grep -qx "$name" deps/excluded.txt 2>/dev/null; then
+              echo "Skip $name"
+              continue
+            fi
+
+            if [ -f "$dir/index.js" ]; then
+              echo "Overwrite $name"
+              cp -f "$dir/index.js" "deps/drivers/$name.js"
+            fi
+          done
+
+      # -------------------------------
+      # 差分検知（2回目以降のみ）
+      # -------------------------------
+      - name: Detect changes
+        if: steps.first.outputs.first == 'false'
         run: |
           cd B
+
           git fetch --depth=50 origin ${{ steps.get_b.outputs.sha }}
 
           git diff --name-status ${{ steps.prev.outputs.sha }} ${{ steps.get_b.outputs.sha }} \
             | grep "^.    packages/" \
             | grep "/index.js" \
-            > ../changes.txt
+            > ../changes.txt || true
 
       - name: Extract target dirs
+        if: steps.first.outputs.first == 'false'
         run: |
           if [ ! -s changes.txt ]; then
             echo "No changes"
+            echo "skip=true" >> $GITHUB_ENV
             exit 0
           fi
 
-          # packages/AAA/index.js → AAA
           awk '{print $1, $2}' changes.txt \
             | sed 's#packages/##' \
             | cut -d'/' -f1 \
             | sort -u > all_dirs.txt
 
-          # 除外適用
           grep -v -F -f deps/excluded.txt all_dirs.txt > target_dirs.txt || true
 
           echo "=== TARGET DIRS ==="
           cat target_dirs.txt || true
 
-      - name: Apply changes (copy & delete)
+      # -------------------------------
+      # 差分適用（追加・更新・削除）
+      # -------------------------------
+      - name: Apply changes
+        if: steps.first.outputs.first == 'false' && env.skip != 'true'
         run: |
           mkdir -p deps/drivers
 
@@ -75,15 +121,21 @@ jobs:
             else
               if [ -f "B/packages/$dir/index.js" ]; then
                 echo "Updating $dir"
-                cp "B/packages/$dir/index.js" "deps/drivers/$dir.js"
+                cp -f "B/packages/$dir/index.js" "deps/drivers/$dir.js"
               fi
             fi
           done < target_dirs.txt
 
+      # -------------------------------
+      # バージョン更新
+      # -------------------------------
       - name: Update version file
         run: |
           echo "${{ steps.get_b.outputs.sha }}" > .b-dependency-version
 
+      # -------------------------------
+      # PR作成
+      # -------------------------------
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
@@ -93,5 +145,7 @@ jobs:
           body: |
             Auto-sync from chirimen-drivers (/packages)
 
-            - includes add/update/delete
-            - excludes dirs from deps/excluded.txt
+            - Weekly sync (Sunday midnight JST)
+            - Includes add/update/delete
+            - First run = full overwrite
+            - Excludes dirs from deps/excluded.txt
