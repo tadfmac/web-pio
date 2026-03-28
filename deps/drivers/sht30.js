@@ -1,13 +1,14 @@
 // @ts-check
 
-// SHT40 driver for CHIRIMEN
+// SHT30 driver for CHIRIMEN raspberry pi3
 // Temperature and Humidity I2C Sensor
+// based on https://github.com/ControlEverythingCommunity/SHT30/blob/master/Python/SHT30.py
 // Programmed by Satoru Takagi
 
 /** @param {number} ms Delay for a number of milliseconds. */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-class SHT40 {
+class SHT30 {
   /**
    * @constructor
    * @param {import('node-web-i2c').I2CPort} i2cPort I2C port instance
@@ -25,12 +26,12 @@ class SHT40 {
     this.i2cSlave = await this.i2cPort.open(this.slaveAddress);
   }
   async readData() {
-    await this.i2cSlave.writeByte(0xfd); // High repeatability measurement
-    await sleep(10); // wait for measurement?
+    await this.i2cSlave.write8(0x2c, 0x06); // High repeatability measurement
+    await sleep(100); // wait for measurement?
     var mdata = await this.i2cSlave.readBytes(6); // prev data..
     // cTemp MSB, cTemp LSB, cTemp CRC, Humididty MSB, Humidity LSB, Humidity CRC
-    var cTemp = (175 * (mdata[0] * 256 + mdata[1])) / 65535.0 - 45; // celsius
-    var humidity = (125 * (mdata[3] * 256 + mdata[4])) / 65535.0 - 6;
+    var cTemp = ((mdata[0] * 256.0 + mdata[1]) * 175) / 65535.0 - 45; // celsius
+    var humidity = (100 * (mdata[3] * 256 + mdata[4])) / 65535.0;
     return {
       humidity: humidity,
       temperature: cTemp,
@@ -38,4 +39,4 @@ class SHT40 {
   }
 }
 
-export default SHT40;
+export default SHT30;
