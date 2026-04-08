@@ -120,6 +120,11 @@ jobs:
           echo "=== TARGET DIRS ==="
           cat target_dirs.txt || true
 
+          if [ ! -s target_dirs.txt ]; then
+            echo "No non-excluded changes"
+            echo "skip=true" >> $GITHUB_ENV
+          fi
+
       # -------------------------------
       # 差分適用（追加・更新・削除）
       # -------------------------------
