@@ -89,6 +89,27 @@ const supportedDevices = {
       voltage: 3.3,
       reference: "https://www.raspberrypi.com/products/raspberry-pi-pico-2/"
     }
+  },
+  pio_xiaoESP32C6: {
+    type: DEF.DEVICE_TYPE_MIDI,
+    // GPIO pins: SDA(D4=22) and SCL(D5=23) excluded to prevent I2C conflicts
+    // Arduino pin numbers from pins_arduino.h (esp32:esp32:XIAO_ESP32C6 3.3.0)
+    // D0=0, D1=1, D2=2, D3=21, D6=16, D7=17, D8=19, D9=20, D10=18
+    gpioPorts: [0, 1, 2, 21, 16, 17, 19, 20, 18],
+    defaultGpioPort: 16,
+    pinNames: ["D0", "D1", "D2", "D3", "D6", "D7", "D8", "D9", "D10"],
+    adcPorts: [0, 1, 2],
+    defaultAdcPort: 0,
+    i2cPorts: [0],
+    defaultI2cPort: 0,
+    leds: {
+      default: { type: DEF.LED_TYPE_MONO }, // User LED (GPIO15)
+      0: { type: DEF.LED_TYPE_MONO } // User LED (GPIO15)
+    },
+    info: {
+      voltage: 3.3,
+      reference: "https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/"
+    }
   }
 };
 

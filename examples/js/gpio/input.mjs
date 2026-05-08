@@ -15,10 +15,11 @@ async function onFound(devices) {
   // devices =　List of devices recently connected.
   console.log("device found : " + devices[0].name);
   let onOff = 0;
+  let defaultPort = devices[0].gpioAccess.config.getDefaultGpioPort();
   inPort = devices[0].gpioAccess.ports.get(1);
   inPort.onchange = onChange;
   await inPort.export("in");
-  outPort = devices[0].gpioAccess.ports.get(2);
+  outPort = devices[0].gpioAccess.ports.get(defaultPort);
   await outPort.export("out");
 }
 
