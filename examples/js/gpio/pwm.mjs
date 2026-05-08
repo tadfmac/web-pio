@@ -13,7 +13,8 @@ async function onFound(devices) {
   console.log("device found : " + devices[0].name);
   let duty = 0;
   let dutyAdd = 16;
-  let port = devices[0].gpioAccess.ports.get(2);
+  let defaultPort = devices[0].gpioAccess.config.getDefaultGpioPort();
+  let port = devices[0].gpioAccess.ports.get(defaultPort);
   await port.export("pwm");
   while (devices[0].isActive) {
     await port.setPWM(duty);

@@ -66,19 +66,23 @@ Some port numbers used by the Web I2C API may differ from the numbers listed in 
 
 See the diagram below for details.    
 
-### [Seeed Studio XIAO RP2040](https://wiki.seeedstudio.com/XIAO-RP2040/)
+### [Seeed Studio XIAO RP2040](https://wiki.seeedstudio.com/XIAO-RP2040/) support via USB-MIDI
 
-![xiao-rp2040](imgs/pop-xiao-rp2040-ports.png)
+![xiao-rp2040](imgs/pio-xiao-rp2040-ports.png)
 
-### [Seeed Studio XIAO RP2350](https://wiki.seeedstudio.com/getting-started-xiao-rp2350/)
+### [Seeed Studio XIAO RP2350](https://wiki.seeedstudio.com/getting-started-xiao-rp2350/) support via USB-MIDI
 
-![xiao-rp2350](imgs/pop-xiao-rp2350-ports.png)
+![xiao-rp2350](imgs/pio-xiao-rp2350-ports.png)
 
-### [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)
+### [Seeed Studio XIAO ESP32C6](https://wiki.seeedstudio.com/ja/xiao_esp32c6_getting_started/) support via BLE-MIDI
+
+![xiao-rp2350](imgs/pio-xiao-esp32c6-ports.png)
+
+### [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) support via USB-MIDI
 
 ![raspi-pico](imgs/pio-raspi-pico-ports.png)
 
-### [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/)
+### [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) support via USB-MIDI
 
 ![raspi-pico](imgs/pio-raspi-pico2-ports.png)
 

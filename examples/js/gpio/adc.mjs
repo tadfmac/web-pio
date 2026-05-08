@@ -13,7 +13,8 @@ let port = null;
 async function onFound(devices) {
   // devices =　List of devices recently connected.
   console.log("device found : " + devices[0].name);
-  port = devices[0].gpioAccess.ports.get(26);
+  let defaultAdcPort = devices[0].gpioAccess.config.getDefaultAdcPort();
+  port = devices[0].gpioAccess.ports.get(defaultAdcPort);
   await port.export("adc");
   while (devices[0].isActive) {
     let value = await port.analogRead();

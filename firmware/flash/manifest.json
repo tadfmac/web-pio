@@ -1,0 +1,15 @@
+{
+  "name": "web-pio XIAO ESP32C6",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        {
+          "path": "../roms/web-pio-xiao-esp32c6.ino.merged.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
