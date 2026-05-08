@@ -68,11 +68,15 @@ See the diagram below for details.
 
 ### [Seeed Studio XIAO RP2040](https://wiki.seeedstudio.com/XIAO-RP2040/)
 
-![xiao-rp2040](imgs/pop-xiao-rp2040-ports.png)
+![xiao-rp2040](imgs/pio-xiao-rp2040-ports.png)
 
 ### [Seeed Studio XIAO RP2350](https://wiki.seeedstudio.com/getting-started-xiao-rp2350/)
 
-![xiao-rp2350](imgs/pop-xiao-rp2350-ports.png)
+![xiao-rp2350](imgs/pio-xiao-rp2350-ports.png)
+
+### [Seeed Studio XIAO ESP32C6](https://wiki.seeedstudio.com/ja/xiao_esp32c6_getting_started/)
+
+![xiao-rp2350](imgs/pio-xiao-esp32c6-ports.png)
 
 ### [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)
 
