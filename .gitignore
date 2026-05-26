@@ -141,4 +141,5 @@ deps/chirimen-drivers/
 
 work/error/
 _expr/
+.claude/
 
