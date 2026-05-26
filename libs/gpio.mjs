@@ -8,7 +8,6 @@
 // - 2025.06.05 moved from pio.mjs
 //
 
-import plmidi from "./pipeline-midi.mjs";
 import devList from "./supportdevices.mjs";
 import F from "./protocol-const.mjs";
 
@@ -43,7 +42,7 @@ class GPIOAccess extends EventTarget {
     this.ports.forEach((port) => {
       port._suspend();
     });
-    plmidi.clearEventQueue(this.config.name);
+    this.config.pipeline.clearEventQueue(this.config.name);
   }
   _resume() {
     if (DEB) console.log("GPIOAccess._resume()");
@@ -61,9 +60,9 @@ class GPIOAccess extends EventTarget {
         return;
       }
       let device = this.config.name;
-      let result = await plmidi.send(device, GPIO_UNEXPORTALL, []);
+      let result = await this.config.pipeline.send(device, F.GPIO_UNEXPORTALL, []);
       if (result == null) {
-        console.error("GPIOAccess.unexportAll() error! plmidi.send() error");
+        console.error("GPIOAccess.unexportAll() error! pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -72,7 +71,7 @@ class GPIOAccess extends EventTarget {
             port.exported = false;
             port.direction = null;
           });
-          plmidi.clearEventQueue(device);
+          this.config.pipeline.clearEventQueue(device);
           resolve(this);
           return;
         } else {
@@ -176,9 +175,9 @@ class GPIOPort extends EventTarget {
             return;
           }
         }
-        plmidi.removeEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber);
+        this.conf.pipeline.removeEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber);
       } else if (dir == F.DIR_IN || dir == F.DIR_INPULLUP) {
-        plmidi.registerEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber, this._onChangeEvent.bind(this));
+        this.conf.pipeline.registerEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber, this._onChangeEvent.bind(this));
       } else {
         console.error("GPIOPort.export() direction not valid =" + direction);
         resolve(null);
@@ -186,9 +185,9 @@ class GPIOPort extends EventTarget {
       }
       if (DEB) console.log("GPIOPort.export() port=" + this.portNumber + " direction=" + direction + " device=" + this.conf.name);
       let data = [this.portNumber, dir];
-      let result = await plmidi.send(this.conf.name, F.GPIO_EXPORT, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.GPIO_EXPORT, data);
       if (result == null) {
-        console.error("GPIOPort.export() error! : plmidi.send() error");
+        console.error("GPIOPort.export() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -220,9 +219,9 @@ class GPIOPort extends EventTarget {
       }
       if (DEB) console.log("GPIOPort.read() port=" + this.portNumber + " device=" + this.conf.name);
       let data = [this.portNumber];
-      let result = await plmidi.send(this.conf.name, F.GPIO_READ, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.GPIO_READ, data);
       if (result == null) {
-        console.error("GPIOPort.read() error! : plmidi.send() error");
+        console.error("GPIOPort.read() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -248,7 +247,7 @@ class GPIOPort extends EventTarget {
       return null;
     }
     if (DEB) console.log("GPIOPort.write() port=" + this.portNumber + " value=" + value + " device=" + this.conf.name);
-    plmidi.sendFire(this.conf.name, F.GPIO_WRITE, [this.portNumber, value]);
+    this.conf.pipeline.sendFire(this.conf.name, F.GPIO_WRITE, [this.portNumber, value]);
     return this;
   }
   analogRead() {
@@ -266,9 +265,9 @@ class GPIOPort extends EventTarget {
       }
       if (DEB) console.log("GPIOPort.analogRead() port=" + this.portNumber + " device=" + this.conf.name);
       let data = [this.portNumber];
-      let result = await plmidi.send(this.conf.name, F.GPIO_ANALOGREAD, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.GPIO_ANALOGREAD, data);
       if (result == null) {
-        console.error("GPIOPort.analogRead() error! : plmidi.send() error");
+        console.error("GPIOPort.analogRead() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -294,14 +293,14 @@ class GPIOPort extends EventTarget {
       }
       if (DEB) console.log("GPIOPort.unexport() port=" + this.portNumber + " device=" + this.conf.name);
       let data = [this.portNumber];
-      let result = await plmidi.send(this.conf.name, F.GPIO_UNEXPORT, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.GPIO_UNEXPORT, data);
       if (result == null) {
-        console.error("GPIOPort.unexport() error! : plmidi.send() error");
+        console.error("GPIOPort.unexport() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
         if (result[0] == 1) {
-          plmidi.removeEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber);
+          this.conf.pipeline.removeEvent(this.conf.name, F.GPIO_ONCHANGE, this.portNumber);
           resolve(this);
           return;
         } else {
@@ -331,7 +330,7 @@ class GPIOPort extends EventTarget {
       duty = _duty;
     }
     if (DEB) console.log("GPIOPort.setPWM() port=" + this.portNumber + " duty=" + duty + " device=" + this.conf.name);
-    plmidi.sendFire(this.conf.name, F.GPIO_SETPWM, [this.portNumber, duty]);
+    this.conf.pipeline.sendFire(this.conf.name, F.GPIO_SETPWM, [this.portNumber, duty]);
     return this;
   }
   _onChangeEvent(onOff) {

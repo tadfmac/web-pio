@@ -11,7 +11,8 @@ const DEF = {
   LED_TYPE_RGB: 1,
   LED_TYPE_MONO: 2,
   DEVICE_TYPE_WIFI: 1,
-  DEVICE_TYPE_MIDI: 2
+  DEVICE_TYPE_MIDI: 2,
+  DEVICE_TYPE_EMU: 3
 };
 
 // Supported Devices

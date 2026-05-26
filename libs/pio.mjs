@@ -37,6 +37,7 @@ class MIDIDevice {
     this.name = name;
     const conf = new DevConf();
     this.conf = conf.init(name);
+    this.conf.pipeline = plmidi;
     this.gpioAccess = new GPIOAccess();
     this.gpioAccess.init(this.conf);
     this.i2cAccess = new I2CAccess();
@@ -132,25 +133,114 @@ class Pio {
     this.onChangeEvent = null;
     this.targetPrefixes = {};
     this.devConf = new DevConf();
+    this.emuDevices = null;
   }
   async init(options) {
-    // options = {server:url}
+    // options = {server:url, mode:"emulator"|"bridge"}
+    // mode 未指定: MIDI + bridge 自動検出（ブラウザのみ）
+    // Node.js 環境では mode に関わらず MIDI のみ有効
     if (DEB) console.log("Pio.init()");
     if (DEB) console.dir(options);
+
+    const mode = options && options.mode;
+    const isNode = typeof window === "undefined";
+
+    // bridge モード（ブラウザのみ）: MIDI 初期化なし、postMessage ホストとして動作
+    if (mode === "bridge") {
+      if (isNode) {
+        console.warn("Pio.init() bridge mode is not supported in Node.js. Use MIDI only.");
+        // bridge モードは Node.js 非対応のため null を返す
+        return null;
+      }
+      try {
+        const { default: emuHost } = await import("./emulator-host.mjs");
+        await emuHost.init();
+        if (DEB) console.log("Pio.init() bridge host mode enabled");
+      } catch (e) {
+        console.error("Pio.init() bridge host init error = " + e);
+        return null;
+      }
+      return this;
+    }
+
+    // MIDI 初期化（emulator / 無指定 / Node.js モード共通）
+    if (mode === "emulator" && isNode) {
+      console.warn("Pio.init() emulator mode is not supported in Node.js. Falling back to MIDI only.");
+    }
     try {
       this.midi = await this.midi.init({ sysex: true });
     } catch (e) {
       console.log("Pio.init() error = " + e);
       return null;
     }
-    if (options != undefined && options) {
-      if (options.server != undefined) {
-        this.server = options.server;
+    if (options && options.server != undefined) {
+      this.server = options.server;
+    }
+
+    // emulator モード（ブラウザのみ）
+    if (mode === "emulator" && !isNode) {
+      try {
+        const { default: emuDev } = await import("./emulator-devices.mjs");
+        this.emuDevices = emuDev;
+        this.emuDevices.setOnChange(this._onChangeEmuDevice.bind(this));
+        if (DEB) console.log("Pio.init() emulator mode enabled");
+      } catch (e) {
+        console.error("Pio.init() emulator init error = " + e);
+        return null;
       }
     }
+
     this.midi.setOnChange(this._onChangeMIDI.bind(this));
     plmidi.init(this.midi);
+
+    // 無指定モード（ブラウザのみ）: bridge iframe の自動検出
+    if (!mode && !isNode) {
+      try {
+        const bridgeWin = await this._detectBridge();
+        if (bridgeWin) {
+          const { default: bridgeDev } = await import("./emulator-bridge-devices.mjs");
+          bridgeDev.init(bridgeWin);
+          this.emuDevices = bridgeDev;
+          this.emuDevices.setOnChange(this._onChangeEmuDevice.bind(this));
+          if (DEB) console.log("Pio.init() bridge client mode enabled");
+        }
+      } catch (e) {
+        if (DEB) console.log("Pio.init() bridge detection skipped: " + e);
+      }
+    }
+
     return this;
+  }
+
+  async _detectBridge() {
+    if (DEB) console.log("Pio._detectBridge()");
+    if (typeof window === "undefined") return null;
+    if (window.frames.length === 0) return null;
+
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        window.removeEventListener("message", handler);
+        resolve(null);
+      }, 500);
+
+      const handler = (event) => {
+        const msg = event.data;
+        if (msg && msg.type === "pio-bridge" && msg.cmd === "READY") {
+          clearTimeout(timer);
+          window.removeEventListener("message", handler);
+          event.source.postMessage({ type: "pio-bridge", cmd: "HANDSHAKE_ACK" }, "*");
+          resolve(event.source);
+        }
+      };
+      window.addEventListener("message", handler);
+
+      // 既存フレームに PING を送る（iframe が先に初期化済みの場合に対応）
+      for (let i = 0; i < window.frames.length; i++) {
+        try {
+          window.frames[i].postMessage({ type: "pio-bridge", cmd: "PING" }, "*");
+        } catch (e) {}
+      }
+    });
   }
   setOnChange(func) {
     if (DEB) console.log("Pio.setOnChange()");
@@ -330,6 +420,8 @@ class Pio {
     }
     for (let device in this.devices) {
       if (DEB) console.log("device=" + device);
+      // エミュレータデバイスは MIDI デバイスリストに存在しないため leave 検出対象外
+      if (this.devices[device].type === c.DEVICE_TYPE_EMU) continue;
       let isActive = false;
       for (let cnt = 0; cnt < devices.length; cnt++) {
         if (device == devices[cnt].name) {
@@ -357,11 +449,55 @@ class Pio {
     }
     if (DEB) console.dir(this.devices);
   }
+  async _onChangeEmuDevice() {
+    if (DEB) console.log("Pio._onChangeEmuDevice()");
+    if (!this.emuDevices) return;
+
+    const emuList = this.emuDevices.getDeviceList();
+    const leaveDevices = [];
+    const foundDevices = [];
+
+    // emuList に存在するデバイスを found として処理
+    for (const emuDev of emuList) {
+      if (!(emuDev.name in this.devices)) {
+        // 新規デバイス
+        this.devices[emuDev.name] = emuDev;
+        foundDevices.push(emuDev.name);
+      } else {
+        // 既存エントリを最新の EmulatorDevice インスタンスで更新
+        this.devices[emuDev.name] = emuDev;
+        if (!emuDev.isActive) {
+          foundDevices.push(emuDev.name);
+        }
+      }
+    }
+
+    // Pio.devices に残る EMU デバイスで emuList にないものを leave として処理
+    // MIDIパスと対称に、ここで suspend() を呼んでから leaveDevices に積む
+    for (const name in this.devices) {
+      if (this.devices[name].type === c.DEVICE_TYPE_EMU) {
+        const stillExists = emuList.some((d) => d.name === name);
+        if (!stillExists && this.devices[name].isActive) {
+          this.devices[name].suspend();
+          leaveDevices.push(name);
+        }
+      }
+    }
+
+    this._expireOnChangeEvent();
+    if (leaveDevices.length > 0) {
+      this._expireOnLeaveEvent(leaveDevices);
+    }
+    if (foundDevices.length > 0) {
+      await this._expireOnFoundEvent(foundDevices);
+    }
+    if (DEB) console.dir(this.devices);
+  }
   _onChangeIP() {
     // そのうち書く
   }
   async wait(time) {
-    await this.midi.wait(time);
+    return new Promise((resolve) => setTimeout(resolve, time));
   }
 }
 

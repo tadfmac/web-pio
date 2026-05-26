@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>emulator test - blink</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;padding:12px;font-family:sans-serif;background:#f0f0f0;}
+h1{font-size:15px;margin:0 0 10px;color:#333;}
+#viewer-wrap{
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:4px;
+  width:100%;
+  height:320px;
+  margin-bottom:8px;
+}
+#controls{margin-bottom:10px;}
+#btn-toggle{
+  padding:5px 18px;
+  font-size:13px;
+  cursor:pointer;
+  border-radius:3px;
+  border:1px solid #999;
+}
+#btn-toggle.connected{background:#fee;border-color:#c00;color:#c00;}
+#btn-toggle.disconnected{background:#efe;border-color:#060;color:#060;}
+#btn-toggle:disabled{opacity:0.5;cursor:default;}
+#log{
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:4px;
+  padding:8px;
+  height:220px;
+  overflow-y:auto;
+  font-family:monospace;
+  font-size:12px;
+}
+#log p{margin:0;padding:2px 0;border-bottom:1px solid #f0f0f0;color:#333;}
+#log p.error{color:#c00;}
+</style>
+</head>
+<body>
+<h1>emulator test — XIAO RP2040 blink</h1>
+<div id="viewer-wrap"></div>
+<div id="controls">
+<button id="btn-toggle" class="disconnected" disabled>接続</button>
+</div>
+<div id="log"></div>
+<script type="module">
+import Pio from "/libs/pio.mjs";
+
+const DEVICE_NAME = "pio_xiaoRP2040-1";
+
+const viewerWrap = document.getElementById("viewer-wrap");
+const logEl = document.getElementById("log");
+const btnToggle = document.getElementById("btn-toggle");
+
+function log(msg, isError) {
+  const p = document.createElement("p");
+  const time = new Date().toLocaleTimeString("ja-JP", {hour12: false});
+  p.textContent = "[" + time + "] " + msg;
+  if (isError) p.classList.add("error");
+  logEl.prepend(p);
+}
+
+function setConnected(val) {
+  btnToggle.textContent = val ? "切断" : "接続";
+  btnToggle.className = val ? "connected" : "disconnected";
+}
+
+const pio = new Pio();
+pio.setOnFound(onFound);
+pio.setOnLeave(onLeave);
+
+const result = await pio.init({mode: "emulator"});
+if (!result) {
+  log("Pio.init() failed", true);
+} else {
+  log("Pio initialized (emulator mode)");
+  await pio.emuDevices.addDevice(DEVICE_NAME, viewerWrap);
+  log("device added: " + DEVICE_NAME);
+  setConnected(true);
+  btnToggle.disabled = false;
+}
+
+btnToggle.addEventListener("click", async () => {
+  btnToggle.disabled = true;
+  if (btnToggle.classList.contains("connected")) {
+    pio.emuDevices.removeDevice(DEVICE_NAME);
+    setConnected(false);
+  } else {
+    const dev = await pio.emuDevices.addDevice(DEVICE_NAME, viewerWrap);
+    if (dev) {
+      log("device added: " + DEVICE_NAME);
+      setConnected(true);
+    } else {
+      log("addDevice failed", true);
+    }
+  }
+  btnToggle.disabled = false;
+});
+
+async function onFound(devices) {
+  const device = devices[0];
+  log("device found: " + device.name);
+
+  const defaultPort = device.gpioAccess.config.getDefaultGpioPort();
+  const port = device.gpioAccess.ports.get(defaultPort);
+  await port.export("out");
+  log("GPIO " + defaultPort + " (D06) exported as out — blink start");
+
+  let onOff = 0;
+  while (device.isActive) {
+    onOff ^= 1;
+    await port.write(onOff);
+    log("GPIO " + defaultPort + " → " + (onOff ? "HIGH" : "LOW"));
+    await pio.wait(500);
+  }
+  log("blink stopped");
+}
+
+function onLeave(devices) {
+  log("device leave: " + devices[0].name);
+}
+</script>
+</body>
+</html>

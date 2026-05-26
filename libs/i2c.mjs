@@ -8,7 +8,6 @@
 // - 2025.06.05 moved from pio.mjs
 //
 
-import plmidi from "./pipeline-midi.mjs";
 import devList from "./supportdevices.mjs";
 import F from "./protocol-const.mjs";
 
@@ -40,7 +39,7 @@ class I2CAccess {
     this.ports.forEach((port) => {
       port._suspend();
     });
-    plmidi.clearAddrCloseQueue(this.config.name);
+    this.config.pipeline.clearAddrCloseQueue(this.config.name);
   }
   _resume() {
     if (DEB) console.log("I2CAccess._resume()");
@@ -91,9 +90,9 @@ class I2CPort extends EventTarget {
       }
       if (DEB) console.log("I2CPort.detect() port=" + this.portNumber + " device=" + this.conf.name);
       let data = [this.portNumber];
-      let result = await plmidi.send(this.conf.name, F.I2C_PORTSCAN, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_PORTSCAN, data);
       if (result == null) {
-        console.error("I2CPort.detect() error! : plmidi.send() error");
+        console.error("I2CPort.detect() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -147,16 +146,16 @@ class I2CSlaveDevice extends EventTarget {
     return new Promise(async (resolve) => {
       if (DEB) console.log("I2CSlaveDevice.init() port=" + this.portNumber + " address=" + this.address + " device=" + this.conf.name);
       let data = [this.portNumber, this.address];
-      let result = await plmidi.send(this.conf.name, F.I2C_INIT, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_INIT, data);
       if (result == null) {
-        console.error("I2CSlaveDevice.init() error! : plmidi.send() error");
+        console.error("I2CSlaveDevice.init() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
         if (result[0] == 1) {
           this.isActive = true;
           let port = this.portNumber == 1 ? 0x80 & this.address : this.address; // i2c port が 0 or 1 の前提
-          plmidi.registerAddrClose(this.conf.name, F.I2C_ONADDRCLOSE, this.portNumber, this.address, this._onClose.bind(this));
+          this.conf.pipeline.registerAddrClose(this.conf.name, F.I2C_ONADDRCLOSE, this.portNumber, this.address, this._onClose.bind(this));
           resolve(this);
         } else {
           console.error("I2CSlaveDevice.init() error received."); // [0]:status [1]:result
@@ -204,9 +203,9 @@ class I2CSlaveDevice extends EventTarget {
         return;
       }
       let data = [this.portNumber, this.address, register];
-      let result = await plmidi.send(this.conf.name, F.I2C_READ8, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_READ8, data);
       if (result == null) {
-        console.error("I2CSlaveDevice.read8() error! : plmidi.send() error");
+        console.error("I2CSlaveDevice.read8() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -231,9 +230,9 @@ class I2CSlaveDevice extends EventTarget {
         return;
       }
       let data = [this.portNumber, this.address, register];
-      let result = await plmidi.send(this.conf.name, F.I2C_READ16, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_READ16, data);
       if (result == null) {
-        console.error("I2CSlaveDevice.read16() error! : plmidi.send() error");
+        console.error("I2CSlaveDevice.read16() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -256,7 +255,7 @@ class I2CSlaveDevice extends EventTarget {
       console.error("I2CSlaveDevice.write8() error! : Device is suspended!");
       return null;
     }
-    plmidi.sendFire(this.conf.name, F.I2C_WRITE8, [this.portNumber, this.address, register, _data]);
+    this.conf.pipeline.sendFire(this.conf.name, F.I2C_WRITE8, [this.portNumber, this.address, register, _data]);
     return true;
   }
   async write16(register, _data) {
@@ -267,7 +266,7 @@ class I2CSlaveDevice extends EventTarget {
     }
     let lsb = _data & 0x00ff;
     let msb = _data >> 8;
-    plmidi.sendFire(this.conf.name, F.I2C_WRITE16, [this.portNumber, this.address, register, lsb, msb]);
+    this.conf.pipeline.sendFire(this.conf.name, F.I2C_WRITE16, [this.portNumber, this.address, register, lsb, msb]);
     return true;
   }
   readByte() {
@@ -279,9 +278,9 @@ class I2CSlaveDevice extends EventTarget {
         return;
       }
       let data = [this.portNumber, this.address];
-      let result = await plmidi.send(this.conf.name, F.I2C_READBYTE, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_READBYTE, data);
       if (result == null) {
-        console.error("I2CSlaveDevice.readByte() error! : plmidi.send() error");
+        console.error("I2CSlaveDevice.readByte() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -306,9 +305,9 @@ class I2CSlaveDevice extends EventTarget {
         return;
       }
       let data = [this.portNumber, this.address, length];
-      let result = await plmidi.send(this.conf.name, F.I2C_READBYTES, data);
+      let result = await this.conf.pipeline.send(this.conf.name, F.I2C_READBYTES, data);
       if (result == null) {
-        console.error("I2CSlaveDevice.readBytes() error! : plmidi.send() error");
+        console.error("I2CSlaveDevice.readBytes() error! : pipeline.send() error");
         resolve(null);
         return;
       } else {
@@ -332,7 +331,7 @@ class I2CSlaveDevice extends EventTarget {
       console.error("I2CSlaveDevice.writeByte() error! : Device is suspended!");
       return null;
     }
-    plmidi.sendFire(this.conf.name, F.I2C_WRITEBYTE, [this.portNumber, this.address, _data]);
+    this.conf.pipeline.sendFire(this.conf.name, F.I2C_WRITEBYTE, [this.portNumber, this.address, _data]);
     return true;
   }
   async writeBytes(_data) {
@@ -345,7 +344,7 @@ class I2CSlaveDevice extends EventTarget {
     for (let cnt = 0; cnt < _data.length; cnt++) {
       data.push(_data[cnt]);
     }
-    plmidi.sendFire(this.conf.name, F.I2C_WRITEBYTES, data);
+    this.conf.pipeline.sendFire(this.conf.name, F.I2C_WRITEBYTES, data);
     return _data.length;
   }
 }
