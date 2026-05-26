@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+#emu-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.emu-device {
+  width: 100%;
+  height: 100%;
+}
+</style>
+</head>
+<body>
+<div id="emu-container"></div>
+<script type="module">
+import Pio from "/libs/pio.mjs";
+
+const pio = new Pio();
+const result = await pio.init({mode: "bridge"});
+if (!result) {
+  console.error("pio bridge init failed");
+}
+</script>
+</body>
+</html>

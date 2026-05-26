@@ -217,9 +217,13 @@ export class emuViewer {
 
     this._updatePinDisplay(pinNum);
 
+    // oldValue === null は「未エクスポート → 初期化」の遷移。
+    // 実機と同様に export() 直後は onchange を発火しない。
+    // 実際にユーザーが入力値を変化させたときのみ発火する。
     if (this.onGPIOChange &&
         (direction === 'in' || direction === 'in-pullup') &&
-        normalized !== oldValue) {
+        normalized !== oldValue &&
+        oldValue !== null) {
       this.onGPIOChange(this._deviceName, pinNum, direction, normalized);
     }
   }

@@ -12,12 +12,15 @@
   "author": "D.F.Mac. @TripArts Music",
   "license": "MIT",
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.5",
     "@julusian/midi": "^3.6.1",
+    "codemirror": "^6.0.2",
     "cors": "^2.8.5",
     "express": "^4.18.1"
   },
   "devDependencies": {
-    "prettier": "^3.8.1",
-    "pm2": "^6.0.14"
+    "esbuild": "^0.28.0",
+    "pm2": "^6.0.14",
+    "prettier": "^3.8.1"
   }
 }

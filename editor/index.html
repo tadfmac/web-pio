@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>web-pio editor</title>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-page-bg:          #e8f5e9;
+  --color-titlebar-bg:      #e8f5e9;
+  --color-btn-bg:           #ffffff;
+  --color-btn-border:       #b0bfc0;
+  --color-btn-emu-bg:       #4caf50;
+  --color-btn-emu-txt:      #ffffff;
+  --color-panel-hdr:        #c8e6c9;
+  --color-panel-hdr-txt:    #1b5e20;
+  --color-editor-bg:        #ffffff;
+  --color-panel-body:       #ffffff;
+  --color-border:           #b0bfc0;
+  --color-dropdown-bg:      #ffffff;
+  --color-dropdown-border:  #b0bfc0;
+  --color-dropdown-hover:   #f1f8e9;
+  --color-dialog-bg:        #e8f5e9;
+  --color-dialog-border:    #b0bfc0;
+  --color-btn-ok-bg:        #f48fb1;
+  --color-btn-ok-hover:     #f06292;
+  --color-btn-ok-txt:       #ffffff;
+  --color-btn-cancel-bg:    #fff176;
+  --color-btn-cancel-hover: #ffee58;
+  --color-btn-cancel-txt:   #555555;
+  --titlebar-h:             44px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  background: var(--color-page-bg);
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: var(--titlebar-h) 1fr;
+}
+
+/* ---- Titlebar ---- */
+#titlebar {
+  height: var(--titlebar-h);
+  background: var(--color-titlebar-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 6px;
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+#titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #2e7d32;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#logo img {
+  height: 22px;
+  width: auto;
+}
+
+#version {
+  font-size: 11px;
+  color: #777;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ---- Toolbar buttons ---- */
+.tb-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  background: var(--color-btn-bg);
+  border: 1px solid var(--color-btn-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  color: #333;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1;
+}
+
+.tb-btn:hover {
+  background: var(--color-btn-emu-bg);
+  border-color: #388e3c;
+  color: #ffffff;
+}
+
+.tb-btn:hover .icon {
+  filter: brightness(0) invert(1);
+}
+
+.tb-btn:active {
+  background: #43a047;
+  border-color: #2e7d32;
+  color: #ffffff;
+}
+
+.tb-btn .icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ---- Dropdown ---- */
+.dd-wrap {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  background: var(--color-dropdown-bg);
+  border: 1px solid var(--color-dropdown-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+  z-index: 300;
+  display: none;
+  min-width: 90px;
+}
+
+.dropdown.open {
+  display: flex;
+}
+
+.dd-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+}
+
+.dd-col + .dd-col {
+  border-left: 1px solid var(--color-dropdown-border);
+  min-width: 120px;
+}
+
+.dd-col:empty {
+  display: none;
+}
+
+.dd-item {
+  padding: 7px 14px;
+  cursor: pointer;
+  color: #333;
+  white-space: nowrap;
+  font-size: 12px;
+  user-select: none;
+}
+
+.dd-item:hover {
+  background: var(--color-dropdown-hover);
+}
+
+.dd-item.selected {
+  background: #e8f5e9;
+  font-weight: 600;
+  color: #1b5e20;
+}
+
+.dd-item.remove-emu {
+  color: #999;
+  font-size: 11px;
+}
+
+/* ---- Main layout ---- */
+#main {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ---- Code panel (left) ---- */
+#code-panel {
+  flex: 1 1 0;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ---- Right column ---- */
+#right-col {
+  flex: 0 0 auto;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ---- Common panel ---- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#gpio-panel {
+  flex: 0 0 auto;
+}
+
+#i2c-panel {
+  flex: 0 0 auto;
+}
+
+#log-panel {
+  flex: 1 1 0;
+  min-height: 60px;
+}
+
+/* ---- Splitters ---- */
+.splitter-v {
+  flex: 0 0 5px;
+  background: var(--color-border);
+  cursor: col-resize;
+  transition: background 0.12s;
+  z-index: 10;
+}
+
+.splitter-v:hover, .splitter-v.dragging {
+  background: #66bb6a;
+}
+
+.splitter-h {
+  flex: 0 0 5px;
+  flex-shrink: 0;
+  background: var(--color-border);
+  cursor: row-resize;
+  transition: background 0.12s;
+  z-index: 10;
+}
+
+.splitter-h:hover, .splitter-h.dragging {
+  background: #66bb6a;
+}
+
+.panel-header {
+  background: var(--color-panel-hdr);
+  color: var(--color-panel-hdr-txt);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.panel-filename {
+  font-weight: 400;
+  color: #558b2f;
+  font-size: 11px;
+}
+
+.panel-body {
+  flex: 1;
+  overflow: auto;
+  background: var(--color-panel-body);
+  position: relative;
+  min-height: 0;
+}
+
+/* ---- Code editor ---- */
+#editor-wrap {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#editor-wrap .cm-editor {
+  height: 100%;
+  font-size: 12.5px;
+  background: var(--color-editor-bg);
+}
+
+#editor-wrap .cm-scroller {
+  font-family: "Fira Code", "Cascadia Code", "Consolas", "Menlo", monospace;
+  overflow: auto;
+}
+
+/* ---- GPIO / Bridge iframe ---- */
+#bridge-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+}
+
+#bridge-frame.visible {
+  display: block;
+}
+
+.empty-msg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #aaa;
+  font-size: 11px;
+  text-align: center;
+  padding: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---- Log panel ---- */
+#log-body {
+  padding: 4px 2px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", "Menlo", monospace;
+  font-size: 11px;
+}
+
+#log-body p {
+  margin: 0;
+  padding: 1px 6px;
+  border-bottom: 1px solid #f5f5f5;
+  color: #333;
+  word-break: break-all;
+}
+
+#log-body p.log-error { color: #c00; }
+#log-body p.log-warn  { color: #e65100; }
+
+/* ---- Save dialog ---- */
+#dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#dialog-overlay.open {
+  display: flex;
+}
+
+.dialog-box {
+  background: var(--color-dialog-bg);
+  border: 1px solid var(--color-dialog-border);
+  border-radius: 8px;
+  padding: 22px 26px;
+  min-width: 300px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+}
+
+.dialog-box h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1b5e20;
+  margin-bottom: 14px;
+}
+
+.dialog-box label {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.dialog-box input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--color-btn-border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  background: #fff;
+  margin-bottom: 18px;
+  outline: none;
+}
+
+.dialog-box input[type="text"]:focus {
+  border-color: #66bb6a;
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dialog-buttons button {
+  padding: 7px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+#btn-save-ok {
+  background: var(--color-btn-ok-bg);
+  color: var(--color-btn-ok-txt);
+}
+
+#btn-save-ok:hover {
+  background: var(--color-btn-ok-hover);
+}
+
+#btn-save-cancel {
+  background: var(--color-btn-cancel-bg);
+  color: var(--color-btn-cancel-txt);
+}
+
+#btn-save-cancel:hover {
+  background: var(--color-btn-cancel-hover);
+}
+</style>
+</head>
+<body>
+
+<header id="titlebar">
+<div id="titlebar-left">
+
+<div id="logo">
+<img src="/_expr/icons/web-pio-logo.png" alt="web-pio">
+web-pio editor
+</div>
+
+<!-- examples -->
+<div class="dd-wrap" id="wrap-examples">
+<button class="tb-btn" id="btn-examples">
+<img class="icon" src="/_expr/icons/led-on.svg" alt="">
+examples
+</button>
+<div class="dropdown" id="dd-examples">
+<div class="dd-col" id="dd-cat">
+<div class="dd-item" data-cat="gpio">GPIO</div>
+<div class="dd-item" data-cat="i2c">I2C</div>
+</div>
+<div class="dd-col" id="dd-files"></div>
+</div>
+</div>
+
+<!-- your works -->
+<div class="dd-wrap" id="wrap-works">
+<button class="tb-btn" id="btn-works">
+<img class="icon" src="/_expr/icons/wrench.svg" alt="">
+Your works
+</button>
+<div class="dropdown" id="dd-works">
+<div class="dd-col" id="dd-works-list"></div>
+</div>
+</div>
+
+<!-- refresh -->
+<button class="tb-btn" id="btn-refresh">
+<img class="icon" src="/_expr/icons/refresh.svg" alt="">
+refresh
+</button>
+
+<!-- emulator -->
+<div class="dd-wrap" id="wrap-emulator">
+<button class="tb-btn" id="btn-emulator">
+<img class="icon" src="/_expr/icons/raspberry-pi.svg" alt="">
+emulator
+</button>
+<div class="dropdown" id="dd-emulator">
+<div class="dd-col" id="dd-emu-list"></div>
+</div>
+</div>
+
+<!-- save -->
+<button class="tb-btn" id="btn-save">
+<img class="icon" src="/_expr/icons/content-save.svg" alt="">
+save
+</button>
+
+<!-- download -->
+<button class="tb-btn" id="btn-download">
+<img class="icon" src="/_expr/icons/download.svg" alt="">
+download
+</button>
+
+</div>
+<div id="version">Ver. 0.1.0</div>
+</header>
+
+<main id="main">
+
+<section id="code-panel" class="panel">
+<div class="panel-header">
+code
+<span class="panel-filename" id="filename-display"></span>
+</div>
+<div id="editor-wrap"></div>
+</section>
+
+<div id="splitter-v" class="splitter-v"></div>
+
+<aside id="right-col">
+
+<section id="gpio-panel" class="panel">
+<div class="panel-header">GPIO emulator</div>
+<div class="panel-body" id="gpio-body">
+<iframe id="bridge-frame" src="/editor/bridge.html" allow="midi"></iframe>
+<p class="empty-msg" id="gpio-empty">Any emulator hasn't loaded yet.</p>
+</div>
+</section>
+
+<div id="splitter-h1" class="splitter-h"></div>
+
+<section id="i2c-panel" class="panel">
+<div class="panel-header">I2C emulator</div>
+<div class="panel-body">
+<p class="empty-msg">The I2C emulator has not yet been implemented.</p>
+</div>
+</section>
+
+<div id="splitter-h2" class="splitter-h"></div>
+
+<section id="log-panel" class="panel">
+<div class="panel-header">Logs</div>
+<div class="panel-body" id="log-body"></div>
+</section>
+
+</aside>
+
+</main>
+
+<!-- hidden run iframe -->
+<iframe id="run-frame" allow="midi" style="display:none; position:absolute; width:0; height:0; border:0;"></iframe>
+
+<!-- save dialog -->
+<div id="dialog-overlay">
+<div class="dialog-box">
+<h3>Save to Your works</h3>
+<label for="save-filename">File name:</label>
+<input type="text" id="save-filename" placeholder="filename.mjs" spellcheck="false">
+<div class="dialog-buttons">
+<button id="btn-save-cancel">Cancel</button>
+<button id="btn-save-ok">Save</button>
+</div>
+</div>
+</div>
+
+<script type="module">
+import {EditorView, basicSetup, javascript} from "/editor/lib/codemirror.bundle.js";
+
+// ---- constants ----
+const LS_PREFIX = "pio-editor:";
+const BRIDGE_SRC = "/editor/bridge.html";
+
+const EXAMPLES = {
+  gpio: ["adc", "blink", "input", "pwm"],
+  i2c: [
+    "adt7410", "detect", "sht40",
+    "ssd1306-32", "ssd1306-64",
+    "ssd1315-32", "ssd1315-40", "ssd1315-64",
+    "vl53l0x"
+  ]
+};
+
+const EMULATORS = [
+  {label: "XIAO RP2040",         name: "pio_xiaoRP2040-emu001"},
+  {label: "XIAO RP2350",         name: "pio_xiaoRP2350-emu001"},
+  {label: "Raspi Pico",          name: "pio_RaspiPico-emu001"},
+  {label: "Raspi Pico 2",        name: "pio_RaspiPico2-emu001"},
+  {label: "XIAO ESP32C6",        name: "pio_xiaoESP32C6-emu001"},
+  {label: "— remove emulator —", name: null}
+];
+
+// ---- state ----
+let currentEmulator = null;
+let currentFilePath = "";
+let currentFileName = "";
+let debounceTimer = null;
+let bridgeReady = false;
+
+// ---- DOM refs ----
+const runFrame      = document.getElementById("run-frame");
+const bridgeFrame   = document.getElementById("bridge-frame");
+const logBody       = document.getElementById("log-body");
+const filenameDisp  = document.getElementById("filename-display");
+const gpioEmpty     = document.getElementById("gpio-empty");
+const dialogOverlay = document.getElementById("dialog-overlay");
+const saveFilenameEl = document.getElementById("save-filename");
+
+// ---- CodeMirror ----
+const editor = new EditorView({
+  doc: "// Welcome to web-pio editor!\n// Select an example from the \"examples\" menu or write your own code.\n",
+  extensions: [
+    basicSetup,
+    javascript(),
+    EditorView.updateListener.of(update => {
+      if (!update.docChanged) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => rebuildRunFrame(), 2000);
+    })
+  ],
+  parent: document.getElementById("editor-wrap")
+});
+
+function getCode() {
+  return editor.state.doc.toString();
+}
+
+function setCode(code) {
+  editor.dispatch({
+    changes: {from: 0, to: editor.state.doc.length, insert: code}
+  });
+}
+
+// ---- dropdown helpers ----
+let activeWrap = null;
+
+function closeAll() {
+  document.querySelectorAll(".dropdown.open").forEach(d => d.classList.remove("open"));
+  activeWrap = null;
+}
+
+function toggleDd(ddEl, wrapEl) {
+  const wasOpen = ddEl.classList.contains("open");
+  closeAll();
+  if (!wasOpen) {
+    ddEl.classList.add("open");
+    activeWrap = wrapEl;
+  }
+}
+
+document.addEventListener("click", e => {
+  if (activeWrap && !activeWrap.contains(e.target)) {
+    closeAll();
+  }
+});
+
+// ---- examples dropdown ----
+const ddExamples = document.getElementById("dd-examples");
+const ddCat      = document.getElementById("dd-cat");
+const ddFiles    = document.getElementById("dd-files");
+const wrapEx     = document.getElementById("wrap-examples");
+
+document.getElementById("btn-examples").addEventListener("click", e => {
+  e.stopPropagation();
+  ddFiles.innerHTML = "";
+  ddCat.querySelectorAll(".dd-item").forEach(i => i.classList.remove("selected"));
+  toggleDd(ddExamples, wrapEx);
+});
+
+ddCat.querySelectorAll(".dd-item").forEach(item => {
+  item.addEventListener("click", e => {
+    e.stopPropagation();
+    const cat = item.dataset.cat;
+    ddCat.querySelectorAll(".dd-item").forEach(i => i.classList.remove("selected"));
+    item.classList.add("selected");
+    ddFiles.innerHTML = "";
+    EXAMPLES[cat].forEach(name => {
+      const div = document.createElement("div");
+      div.className = "dd-item";
+      div.textContent = name;
+      div.addEventListener("click", () => {
+        closeAll();
+        loadExample(cat, name);
+      });
+      ddFiles.appendChild(div);
+    });
+  });
+});
+
+async function loadExample(cat, name) {
+  const path = `examples/js/${cat}/${name}.mjs`;
+  try {
+    const res = await fetch(`/${path}`);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const code = await res.text();
+    currentFilePath = path;
+    currentFileName = `${name}.mjs`;
+    filenameDisp.textContent = currentFileName;
+    setCode(code);
+    clearTimeout(debounceTimer);
+    clearLog();
+    rebuildRunFrame();
+  } catch (err) {
+    appendLog("error", `Failed to load: ${name}.mjs (${err.message})`);
+  }
+}
+
+// ---- your works dropdown ----
+const ddWorks     = document.getElementById("dd-works");
+const ddWorksList = document.getElementById("dd-works-list");
+const wrapWorks   = document.getElementById("wrap-works");
+
+document.getElementById("btn-works").addEventListener("click", e => {
+  e.stopPropagation();
+  buildWorksList();
+  toggleDd(ddWorks, wrapWorks);
+});
+
+function buildWorksList() {
+  ddWorksList.innerHTML = "";
+  const keys = Object.keys(localStorage)
+    .filter(k => k.startsWith(LS_PREFIX))
+    .sort();
+  if (keys.length === 0) {
+    const div = document.createElement("div");
+    div.className = "dd-item";
+    div.textContent = "(empty)";
+    div.style.color = "#aaa";
+    div.style.cursor = "default";
+    ddWorksList.appendChild(div);
+    return;
+  }
+  keys.forEach(key => {
+    const filename = key.slice(LS_PREFIX.length);
+    const div = document.createElement("div");
+    div.className = "dd-item";
+    div.textContent = filename;
+    div.addEventListener("click", () => {
+      closeAll();
+      loadWork(key, filename);
+    });
+    ddWorksList.appendChild(div);
+  });
+}
+
+function loadWork(key, filename) {
+  const raw = localStorage.getItem(key);
+  if (raw === null) return;
+  let code, filePath;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && typeof parsed.code === "string") {
+      // 新形式: {code, filePath}
+      code = parsed.code;
+      filePath = parsed.filePath || "";
+    } else {
+      throw new Error("not our format");
+    }
+  } catch {
+    // 旧形式: plain code string（後方互換）
+    code = raw;
+    filePath = "";
+  }
+  currentFilePath = filePath;
+  currentFileName = filename;
+  filenameDisp.textContent = filename;
+  setCode(code);
+  clearTimeout(debounceTimer);
+  clearLog();
+  rebuildRunFrame();
+}
+
+// ---- refresh ----
+document.getElementById("btn-refresh").addEventListener("click", async () => {
+  clearLog();
+  if (currentEmulator) {
+    bridgeReady = false;
+    bridgeFrame.src = BRIDGE_SRC;
+    await new Promise(r => bridgeFrame.addEventListener("load", r, {once: true}));
+    bridgeReady = true;
+  }
+  rebuildRunFrame();
+});
+
+// ---- emulator dropdown ----
+const ddEmulator = document.getElementById("dd-emulator");
+const ddEmuList  = document.getElementById("dd-emu-list");
+const wrapEmu    = document.getElementById("wrap-emulator");
+
+EMULATORS.forEach(emu => {
+  const div = document.createElement("div");
+  div.className = emu.name === null ? "dd-item remove-emu" : "dd-item";
+  div.textContent = emu.label;
+  div.addEventListener("click", () => {
+    closeAll();
+    selectEmulator(emu.name);
+  });
+  ddEmuList.appendChild(div);
+});
+
+document.getElementById("btn-emulator").addEventListener("click", e => {
+  e.stopPropagation();
+  toggleDd(ddEmulator, wrapEmu);
+});
+
+async function selectEmulator(name) {
+  currentEmulator = name;
+  if (name) {
+    gpioEmpty.style.display = "none";
+    bridgeFrame.classList.add("visible");
+    // エミュレータ切替のたびにブリッジをリロードしてクリーンな状態にする
+    bridgeReady = false;
+    bridgeFrame.src = BRIDGE_SRC;
+    await new Promise(r => bridgeFrame.addEventListener("load", r, {once: true}));
+    bridgeReady = true;
+  } else {
+    bridgeFrame.classList.remove("visible");
+    gpioEmpty.style.display = "";
+  }
+  rebuildRunFrame();
+}
+
+// ---- save ----
+document.getElementById("btn-save").addEventListener("click", () => {
+  saveFilenameEl.value = currentFileName || "script.mjs";
+  dialogOverlay.classList.add("open");
+  saveFilenameEl.focus();
+  saveFilenameEl.select();
+});
+
+document.getElementById("btn-save-cancel").addEventListener("click", () => {
+  dialogOverlay.classList.remove("open");
+});
+
+document.getElementById("btn-save-ok").addEventListener("click", doSave);
+
+saveFilenameEl.addEventListener("keydown", e => {
+  if (e.key === "Enter") doSave();
+  if (e.key === "Escape") dialogOverlay.classList.remove("open");
+});
+
+dialogOverlay.addEventListener("click", e => {
+  if (e.target === dialogOverlay) dialogOverlay.classList.remove("open");
+});
+
+function doSave() {
+  const filename = saveFilenameEl.value.trim();
+  if (!filename) return;
+  const key = LS_PREFIX + filename;
+  if (localStorage.getItem(key) !== null) {
+    if (!confirm(`"${filename}" already exists. Overwrite?`)) return;
+  }
+  // code と filePath を JSON で保存する。
+  // ロード時に filePath を復元することで相対 import の解決が正確になる。
+  localStorage.setItem(key, JSON.stringify({code: getCode(), filePath: currentFilePath || ""}));
+  currentFileName = filename;
+  filenameDisp.textContent = filename;
+  dialogOverlay.classList.remove("open");
+  appendLog("log", `Saved: ${filename}`);
+}
+
+// ---- download ----
+document.getElementById("btn-download").addEventListener("click", () => {
+  const blob = new Blob([getCode()], {type: "text/javascript"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = currentFileName || "script.mjs";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- log ----
+function clearLog() {
+  logBody.innerHTML = "";
+}
+
+function appendLog(level, msg) {
+  const p = document.createElement("p");
+  const ts = new Date().toLocaleTimeString("en-US", {hour12: false});
+  p.textContent = `[${ts}] ${msg}`;
+  if (level === "error") p.className = "log-error";
+  else if (level === "warn") p.className = "log-warn";
+  logBody.appendChild(p);
+  logBody.scrollTop = logBody.scrollHeight;
+}
+
+// ---- message handling ----
+window.addEventListener("message", e => {
+  const msg = e.data;
+  if (!msg || typeof msg !== "object") return;
+  // console output from run-frame
+  if (msg.type === "editor-log") {
+    appendLog(msg.level || "log", msg.msg || "");
+    return;
+  }
+  // GPIO event relay: bridge-frame (parent=editor) → run-frame
+  if (msg.type === "pio-bridge-event") {
+    runFrame.contentWindow?.postMessage(msg, "*");
+  }
+});
+
+// ---- import rewriting ----
+function transformImports(code, filePath) {
+  const origin = window.location.origin;
+  // filePath がない場合はルート "/" をベースにする。
+  // ブラウザの URL 正規化により "../../../libs/pio.mjs" → "/libs/pio.mjs" に解決される。
+  const dir = filePath ? filePath.replace(/[^/]+$/, "") : "";
+  const base = `${origin}/${dir}`;
+  return code.replace(
+    /(\bfrom\s+["'])(\.\.?\/[^"'\s]+)(["'])/g,
+    (_, pre, rel, post) => {
+      try {
+        return pre + new URL(rel, base).href + post;
+      } catch (_e) {
+        return pre + rel + post;
+      }
+    }
+  );
+}
+
+// ---- srcdoc generation ----
+function generateSrcdoc(code, emulator, filePath) {
+  const transformed = transformImports(code, filePath);
+  const origin = window.location.origin;
+  const pioUrl = JSON.stringify(origin + "/libs/pio.mjs");
+  const bcdUrl = JSON.stringify(origin + "/libs/emulator-bridge-devices.mjs");
+  const codeJson = JSON.stringify(transformed);
+  const emuJson = JSON.stringify(emulator || "");
+
+  return `<!DOCTYPE html>
+<html>
+<body>
+<script type="module">
+["log","warn","error"].forEach(lvl => {
+  const _o = console[lvl];
+  console[lvl] = (...a) => {
+    _o.apply(console, a);
+    window.parent.postMessage({type:"editor-log",level:lvl,msg:a.map(String).join(" ")}, "*");
+  };
+});
+
+const EMULATOR = ${emuJson};
+let __BCD = null;
+let __bw  = null;
+
+if (EMULATOR) {
+  const {default: __Pio} = await import(${pioUrl});
+  const {default: _bcd}  = await import(${bcdUrl});
+  __BCD = _bcd;
+  __bw  = window.parent.document.getElementById("bridge-frame").contentWindow;
+  __BCD.init(__bw);
+  const __oi = __Pio.prototype.init;
+  __Pio.prototype.init = async function(o) {
+    const r = await __oi.call(this, o);
+    if (!this.emuDevices) {
+      this.emuDevices = __BCD;
+      __BCD.setOnChange(this._onChangeEmuDevice.bind(this));
+    }
+    return r;
+  };
+}
+
+const __code = ${codeJson};
+const __blob = new Blob([__code], {type: "application/javascript"});
+const __url  = URL.createObjectURL(__blob);
+try {
+  await import(__url);
+} catch(e) {
+  console.error(String(e));
+} finally {
+  URL.revokeObjectURL(__url);
+}
+
+if (__BCD && __bw) {
+  // REMOVE_DEVICE を bridge に直接送信して前回のデバイスをクリーンアップ
+  // (BCD のローカル devices は毎回リセットされるため removeDevice() は使えない)
+  __bw.postMessage({type: "pio-bridge", cmd: "REMOVE_DEVICE", device: EMULATOR}, "*");
+  await new Promise(r => setTimeout(r, 80));
+  try {
+    await __BCD.addDevice(EMULATOR);
+  } catch(e) {
+    console.error("addDevice failed: " + e);
+  }
+}
+<\/script>
+</body>
+</html>`;
+}
+
+// ---- run frame ----
+function rebuildRunFrame() {
+  const code = getCode().trim();
+  if (!code) return;
+  const srcdoc = generateSrcdoc(code, currentEmulator, currentFilePath);
+  runFrame.srcdoc = srcdoc;
+}
+
+// ---- layout: initial sizing ----
+function initLayout() {
+  const mainEl = document.getElementById("main");
+  const rect = mainEl.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const totalW = rect.width;
+  const totalH = rect.height;
+  const SPLITTER_H = 5;
+
+  // Right column: 42% of total width
+  const rightW = Math.round(totalW * 0.42);
+  document.getElementById("right-col").style.width = rightW + "px";
+
+  // GPIO: 48%, I2C: 27%, Log gets the rest via flex:1
+  const availH = totalH - SPLITTER_H * 2;
+  document.getElementById("gpio-panel").style.height = Math.round(availH * 0.48) + "px";
+  document.getElementById("i2c-panel").style.height = Math.round(availH * 0.27) + "px";
+}
+
+// ---- layout: drag splitters ----
+// ドラッグ中に全画面を覆う透明オーバーレイ。
+// iframe（bridge-frame）がマウスイベントを横取りするのを防ぐ。
+const dragOverlay = document.createElement("div");
+dragOverlay.style.cssText = "position:fixed;inset:0;z-index:9999;display:none;";
+document.body.appendChild(dragOverlay);
+
+function makeDragger(splitterEl, {dir, getStart, apply, min, maxFn}) {
+  splitterEl.addEventListener("mousedown", e => {
+    e.preventDefault();
+
+    const startPos = dir === "v" ? e.clientX : e.clientY;
+    const startVal = getStart();
+
+    splitterEl.classList.add("dragging");
+    dragOverlay.style.cursor = dir === "v" ? "col-resize" : "row-resize";
+    dragOverlay.style.display = "block";
+    document.body.style.userSelect = "none";
+
+    function onMove(ev) {
+      const pos = dir === "v" ? ev.clientX : ev.clientY;
+      const delta = pos - startPos;
+      const raw = dir === "v" ? startVal - delta : startVal + delta;
+      apply(Math.max(min, Math.min(maxFn(), raw)));
+    }
+
+    function onUp() {
+      splitterEl.classList.remove("dragging");
+      dragOverlay.style.display = "none";
+      dragOverlay.style.cursor = "";
+      document.body.style.userSelect = "";
+      dragOverlay.removeEventListener("mousemove", onMove);
+      dragOverlay.removeEventListener("mouseup", onUp);
+    }
+
+    dragOverlay.addEventListener("mousemove", onMove);
+    dragOverlay.addEventListener("mouseup", onUp);
+  });
+}
+
+function initSplitters() {
+  const mainEl   = document.getElementById("main");
+  const rightCol = document.getElementById("right-col");
+  const gpioPanel = document.getElementById("gpio-panel");
+  const i2cPanel  = document.getElementById("i2c-panel");
+  const SPLITTER = 5;
+
+  // Vertical: code | right
+  makeDragger(document.getElementById("splitter-v"), {
+    dir: "v",
+    getStart: () => rightCol.getBoundingClientRect().width,
+    apply: v => { rightCol.style.width = v + "px"; },
+    min: 180,
+    maxFn: () => mainEl.getBoundingClientRect().width - 200 - SPLITTER
+  });
+
+  // Horizontal 1: gpio | i2c+log
+  makeDragger(document.getElementById("splitter-h1"), {
+    dir: "h",
+    getStart: () => gpioPanel.getBoundingClientRect().height,
+    apply: v => { gpioPanel.style.height = v + "px"; },
+    min: 80,
+    maxFn: () => rightCol.getBoundingClientRect().height - 40 - 60 - SPLITTER * 2
+  });
+
+  // Horizontal 2: i2c | log
+  makeDragger(document.getElementById("splitter-h2"), {
+    dir: "h",
+    getStart: () => i2cPanel.getBoundingClientRect().height,
+    apply: v => { i2cPanel.style.height = v + "px"; },
+    min: 24,
+    maxFn: () => {
+      const rightH = rightCol.getBoundingClientRect().height;
+      const gpioH  = gpioPanel.getBoundingClientRect().height;
+      return rightH - gpioH - 60 - SPLITTER * 2;
+    }
+  });
+}
+
+// ---- init ----
+bridgeFrame.addEventListener("load", () => {
+  bridgeReady = true;
+});
+
+requestAnimationFrame(() => {
+  initLayout();
+  initSplitters();
+});
+
+</script>
+</body>
+</html>

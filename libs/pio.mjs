@@ -134,6 +134,9 @@ class Pio {
     this.targetPrefixes = {};
     this.devConf = new DevConf();
     this.emuDevices = null;
+    // onFoundFunc に渡した devices 配列の参照。後から接続されたデバイスはここに追加して
+    // onFoundFunc を再呼び出しせずに済むようにする。デバイスが一つでも leave したらリセット。
+    this._currentDevices = null;
   }
   async init(options) {
     // options = {server:url, mode:"emulator"|"bridge"}
@@ -173,6 +176,11 @@ class Pio {
       console.log("Pio.init() error = " + e);
       return null;
     }
+    // pomidi.init() が内部でエラーを catch して null を返す場合への対応
+    if (!this.midi) {
+      if (DEB) console.log("Pio.init() MIDI unavailable (null returned)");
+      this.midi = null;
+    }
     if (options && options.server != undefined) {
       this.server = options.server;
     }
@@ -190,8 +198,10 @@ class Pio {
       }
     }
 
-    this.midi.setOnChange(this._onChangeMIDI.bind(this));
-    plmidi.init(this.midi);
+    if (this.midi) {
+      this.midi.setOnChange(this._onChangeMIDI.bind(this));
+      plmidi.init(this.midi);
+    }
 
     // 無指定モード（ブラウザのみ）: bridge iframe の自動検出
     if (!mode && !isNode) {
@@ -290,6 +300,8 @@ class Pio {
   }
   _expireOnLeaveEvent(leaveDevices) {
     if (DEB) console.log("Pio._expireOnLeaveEvent()");
+    // デバイスが離脱したら _currentDevices をリセット。次の接続で onFoundFunc が再呼び出しされる
+    this._currentDevices = null;
     if (this.onLeaveFunc != null) {
       let devices = [];
       if (Object.keys(this.targetPrefixes).length > 0) {
@@ -358,23 +370,38 @@ class Pio {
     }
 
     if (this.onFoundFunc != null) {
-      let devices = [];
+      // 今回 found されたデバイスをフィルタして newDevices に積む
+      let newDevices = [];
       if (Object.keys(this.targetPrefixes).length > 0) {
         for (let cnt = 0; cnt < foundDevices.length; cnt++) {
           for (let prefix in this.targetPrefixes) {
             let name = foundDevices[cnt].split("-")[0];
             if (name == prefix) {
-              devices.push(this.devices[foundDevices[cnt]]);
+              newDevices.push(this.devices[foundDevices[cnt]]);
               break;
             }
           }
         }
       } else {
         for (let cnt = 0; cnt < foundDevices.length; cnt++) {
-          devices.push(this.devices[foundDevices[cnt]]);
+          newDevices.push(this.devices[foundDevices[cnt]]);
         }
       }
-      this.onFoundFunc(devices);
+      if (newDevices.length === 0) return;
+
+      if (this._currentDevices === null) {
+        // 初回: 配列を作って onFoundFunc を呼ぶ
+        this._currentDevices = newDevices;
+        this.onFoundFunc(this._currentDevices);
+      } else {
+        // 既に onFoundFunc 呼び済み: 同じ配列にデバイスを追加するだけ
+        // ループ内の devices[0] は変わらず最初のデバイスを指し続ける
+        for (const dev of newDevices) {
+          if (!this._currentDevices.includes(dev)) {
+            this._currentDevices.push(dev);
+          }
+        }
+      }
     }
   }
   _getActiveDeviceList() {
