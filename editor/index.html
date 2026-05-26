@@ -81,13 +81,18 @@ body {
 }
 
 #logo img {
-  height: 22px;
+  height: 36px;
   width: auto;
 }
 
 #version {
-  font-size: 11px;
-  color: #777;
+  position:absolute;
+  bottom:0px;
+  right:0px;
+  padding:2px 4px;
+  background-color:rgba(0,0,0,0.6);
+  font-size: 10px;
+  color: white;
   white-space: nowrap;
   user-select: none;
 }
@@ -305,7 +310,7 @@ body {
 
 #editor-wrap .cm-editor {
   height: 100%;
-  font-size: 12.5px;
+  font-size: 14px;
   background: var(--color-editor-bg);
 }
 
@@ -446,13 +451,32 @@ body {
 #btn-save-cancel:hover {
   background: var(--color-btn-cancel-hover);
 }
+#talogo{
+  width:24px;
+  height:24px;
+  background-repeat: no-repeat;
+  background-image: url(/imgs/icon.png);
+  background-position: center;
+  background-size: contain;
+}
+#ghlogo{
+  width:24px;
+  height:24px;
+  background-repeat: no-repeat;
+  background-image: url(/imgs/github-logo.png);
+  background-position: center;
+  background-size: contain;
+}
+#talinkswrap{
+  display:flex;
+  gap:10px;
+}
 </style>
 </head>
 <body>
 
 <header id="titlebar">
 <div id="titlebar-left">
-
 <div id="logo">
 <img src="/imgs/web-pio-logo.png" alt="web-pio">
 web-pio editor
@@ -514,7 +538,10 @@ download
 </button>
 
 </div>
-<div id="version">Ver. 0.1.0</div>
+<div id="talinkswrap">
+<a href="https://mz4u.net"><div id="talogo"></div></a>
+<a href="https://github.com/tadfmac/web-pio"><div id="ghlogo"></div></a>
+</div>
 </header>
 
 <main id="main">
@@ -556,7 +583,7 @@ code
 </section>
 
 </aside>
-
+<div id="version">v0.1.1</div>
 </main>
 
 <!-- hidden run iframe -->
@@ -1017,7 +1044,7 @@ function initLayout() {
   const SPLITTER_H = 5;
 
   // Right column: 42% of total width
-  const rightW = Math.round(totalW * 0.42);
+  const rightW = Math.round(totalW * 0.32);
   document.getElementById("right-col").style.width = rightW + "px";
 
   // GPIO: 48%, I2C: 27%, Log gets the rest via flex:1
