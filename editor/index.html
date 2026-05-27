@@ -1181,6 +1181,37 @@ function initSplitters() {
   });
 }
 
+// ---- query params ----
+async function initFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const exampleParam  = params.get("example");
+  const emulatorParam = params.get("emulator");
+
+  if (exampleParam) {
+    // "gpio blink" (+ is decoded as space by URLSearchParams)
+    const parts = exampleParam.trim().split(/\s+/);
+    if (parts.length === 2) {
+      const [cat, name] = parts;
+      if (EXAMPLES[cat] && EXAMPLES[cat].includes(name)) {
+        await loadExample(cat, name);
+      }
+    }
+  }
+
+  if (emulatorParam) {
+    // normalize: lowercase + remove non-alphanumeric
+    // e.g. "xiaorp2040" matches label "XIAO RP2040" → "xiaorp2040"
+    const norm = emulatorParam.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const found = EMULATORS.find(e => {
+      if (!e.name) return false;
+      return e.label.toLowerCase().replace(/[^a-z0-9]/g, "") === norm;
+    });
+    if (found) {
+      await selectEmulator(found.name);
+    }
+  }
+}
+
 // ---- init ----
 bridgeFrame.addEventListener("load", () => {
   bridgeReady = true;
@@ -1189,6 +1220,7 @@ bridgeFrame.addEventListener("load", () => {
 requestAnimationFrame(() => {
   initLayout();
   initSplitters();
+  initFromQuery();
 });
 
 </script>
