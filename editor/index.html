@@ -2,13 +2,18 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
 <title>web-pio editor</title>
 <style>
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 :root {
@@ -45,6 +50,7 @@ body {
   overflow: hidden;
   display: grid;
   grid-template-rows: var(--titlebar-h) 1fr;
+  max-width: 100vw;
 }
 
 /* ---- Titlebar ---- */
@@ -505,6 +511,305 @@ body {
   color: #555;
   line-height: 1.7;
 }
+
+/* ---- Hamburger button (mobile only) ---- */
+#hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #2e7d32;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
+/* ---- Sidemenu overlay ---- */
+#sidemenu-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+}
+
+#sidemenu-overlay.open {
+  display: block;
+}
+
+/* ---- Sidemenu panel ---- */
+#sidemenu {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 260px;
+  height: 100%;
+  background: #fff;
+  z-index: 210;
+  transition: right 0.22s ease;
+  overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+#sidemenu.open {
+  right: 0;
+}
+
+#sidemenu-header {
+  height: var(--titlebar-h);
+  background: var(--color-titlebar-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #2e7d32;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sm-section-label {
+  padding: 5px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ececec;
+  user-select: none;
+}
+
+.sm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  user-select: none;
+}
+
+.sm-row:hover, .sm-row:active {
+  background: #f1f8e9;
+}
+
+.sm-row.sm-expand {
+  justify-content: space-between;
+}
+
+.sm-row .sm-chevron {
+  font-size: 10px;
+  color: #bbb;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.sm-row.sm-open .sm-chevron {
+  transform: rotate(90deg);
+}
+
+.sm-row .sm-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sm-sub {
+  display: none;
+  background: #fafff9;
+}
+
+.sm-sub.sm-open {
+  display: block;
+}
+
+.sm-sub-row {
+  padding: 9px 14px 9px 38px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+  user-select: none;
+}
+
+.sm-sub-row:hover, .sm-sub-row:active {
+  background: #e8f5e9;
+}
+
+.sm-sub-cat {
+  padding: 8px 14px 8px 24px;
+  border-bottom: 1px solid #e0eed0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1b5e20;
+  background: #f0f9f0;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sm-sub-cat:hover, .sm-sub-cat:active {
+  background: #d8f0da;
+}
+
+.sm-sub-cat .sm-chevron {
+  font-size: 9px;
+  color: #bbb;
+  transition: transform 0.15s;
+}
+
+.sm-sub-cat.sm-open .sm-chevron {
+  transform: rotate(90deg);
+}
+
+.sm-file-row {
+  display: none;
+  padding: 7px 14px 7px 50px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+  user-select: none;
+}
+
+.sm-file-row.sm-open {
+  display: block;
+}
+
+.sm-file-row:hover, .sm-file-row:active {
+  background: #e8f5e9;
+}
+
+.sm-remove-emu {
+  color: #aaa;
+  font-size: 11px;
+}
+
+.sm-links {
+  display: flex;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.sm-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: #555;
+  font-size: 12px;
+}
+
+/* ---- Responsive: smartphone ---- */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+    max-width: 100vw;
+  }
+
+  #hamburger-btn {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  #titlebar-left > *:not(#logo) {
+    display: none !important;
+  }
+
+  /* titlebar-left: ロゴだけ残るので flex で縮めてハンバーガーを押し出さない */
+  #titlebar-left {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #logo {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+  }
+
+  #talinkswrap {
+    display: none;
+  }
+
+  /* main: 縦1列、横は画面内に収める */
+  #main {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: visible;
+    height: auto;
+    max-width: 100%;
+  }
+
+  #splitter-v {
+    display: none;
+  }
+
+  #code-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    height: 50vh;
+    min-height: 220px;
+    flex: none;
+  }
+
+  #right-col {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    flex: none;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  #gpio-panel {
+    height: 75vw;
+    min-height: 220px;
+    max-width: 100%;
+  }
+
+  #i2c-panel {
+    height: 160px;
+    max-width: 100%;
+  }
+
+  #log-panel {
+    height: 200px;
+    flex: none;
+    max-width: 100%;
+  }
+
+  /* バージョン表示: fixed でスクロール位置に関係なく画面最下部に固定 */
+  #version {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 50;
+  }
+}
 </style>
 </head>
 <body>
@@ -576,6 +881,7 @@ download
 <a href="https://mz4u.net"><div id="talogo"></div></a>
 <a href="https://github.com/tadfmac/web-pio"><div id="ghlogo"></div></a>
 </div>
+<button id="hamburger-btn" aria-label="Menu">&#9776;</button>
 </header>
 
 <main id="main">
@@ -619,6 +925,15 @@ code
 </aside>
 <div id="version">v0.1.1</div>
 </main>
+
+<!-- Sidemenu overlay -->
+<div id="sidemenu-overlay"></div>
+
+<!-- Sidemenu panel -->
+<div id="sidemenu">
+<div id="sidemenu-header">Menu</div>
+<div id="sidemenu-content"></div>
+</div>
 
 <!-- hidden run iframe -->
 <iframe id="run-frame" allow="midi" style="display:none; position:absolute; width:0; height:0; border:0;"></iframe>
@@ -1085,6 +1400,7 @@ function rebuildRunFrame() {
 
 // ---- layout: initial sizing ----
 function initLayout() {
+  if (window.innerWidth <= 767) return;
   const mainEl = document.getElementById("main");
   const rect = mainEl.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
@@ -1210,6 +1526,211 @@ async function initFromQuery() {
       await selectEmulator(found.name);
     }
   }
+}
+
+// ---- Sidemenu ----
+const hamburgerBtn    = document.getElementById("hamburger-btn");
+const sidemenuOverlay = document.getElementById("sidemenu-overlay");
+const sidemenu        = document.getElementById("sidemenu");
+const sidemenuContent = document.getElementById("sidemenu-content");
+
+function openSidemenu() {
+  buildSidemenu();
+  sidemenu.classList.add("open");
+  sidemenuOverlay.classList.add("open");
+}
+
+function closeSidemenu() {
+  sidemenu.classList.remove("open");
+  sidemenuOverlay.classList.remove("open");
+}
+
+hamburgerBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  openSidemenu();
+});
+
+sidemenuOverlay.addEventListener("click", closeSidemenu);
+
+function makeSectionLabel(text) {
+  const div = document.createElement("div");
+  div.className = "sm-section-label";
+  div.textContent = text;
+  return div;
+}
+
+function makeSmRow(iconSrc, text, hasChevron) {
+  const div = document.createElement("div");
+  div.className = "sm-row" + (hasChevron ? " sm-expand" : "");
+  if (iconSrc) {
+    const img = document.createElement("img");
+    img.className = "sm-icon";
+    img.src = iconSrc;
+    img.alt = "";
+    div.appendChild(img);
+  }
+  const span = document.createElement("span");
+  span.textContent = text;
+  span.style.flex = "1";
+  div.appendChild(span);
+  if (hasChevron) {
+    const chev = document.createElement("span");
+    chev.className = "sm-chevron";
+    chev.textContent = "▶";
+    div.appendChild(chev);
+  }
+  return div;
+}
+
+function buildSidemenu() {
+  sidemenuContent.innerHTML = "";
+
+  // ---- Examples ----
+  sidemenuContent.appendChild(makeSectionLabel("Examples"));
+  const exRow = makeSmRow("/imgs/icons/led-on.svg", "examples", true);
+  sidemenuContent.appendChild(exRow);
+  const exSub = document.createElement("div");
+  exSub.className = "sm-sub";
+
+  Object.entries(EXAMPLES).forEach(([cat, files]) => {
+    const catRow = document.createElement("div");
+    catRow.className = "sm-sub-cat";
+    const catChev = document.createElement("span");
+    catChev.className = "sm-chevron";
+    catChev.textContent = "▶";
+    catRow.appendChild(catChev);
+    catRow.appendChild(document.createTextNode(cat.toUpperCase()));
+    exSub.appendChild(catRow);
+    let catOpen = false;
+    const fileRows = [];
+    files.forEach(name => {
+      const fileRow = document.createElement("div");
+      fileRow.className = "sm-file-row";
+      fileRow.textContent = name;
+      fileRow.addEventListener("click", () => {
+        closeSidemenu();
+        loadExample(cat, name);
+      });
+      exSub.appendChild(fileRow);
+      fileRows.push(fileRow);
+    });
+    // addEventListener はループ外で1回だけ登録する
+    catRow.addEventListener("click", e => {
+      e.stopPropagation();
+      catOpen = !catOpen;
+      catRow.classList.toggle("sm-open", catOpen);
+      fileRows.forEach(r => r.classList.toggle("sm-open", catOpen));
+    });
+  });
+
+  sidemenuContent.appendChild(exSub);
+  exRow.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = exSub.classList.toggle("sm-open");
+    exRow.classList.toggle("sm-open", isOpen);
+  });
+
+  // ---- Your works ----
+  sidemenuContent.appendChild(makeSectionLabel("Your works"));
+  const worksRow = makeSmRow("/imgs/icons/wrench.svg", "Your works", true);
+  sidemenuContent.appendChild(worksRow);
+  const worksSub = document.createElement("div");
+  worksSub.className = "sm-sub";
+  const wkeys = Object.keys(localStorage).filter(k => k.startsWith(LS_PREFIX)).sort();
+  if (wkeys.length === 0) {
+    const emptyRow = document.createElement("div");
+    emptyRow.className = "sm-sub-row";
+    emptyRow.textContent = "(empty)";
+    emptyRow.style.color = "#aaa";
+    emptyRow.style.cursor = "default";
+    worksSub.appendChild(emptyRow);
+  } else {
+    wkeys.forEach(key => {
+      const filename = key.slice(LS_PREFIX.length);
+      const row = document.createElement("div");
+      row.className = "sm-sub-row";
+      row.textContent = filename;
+      row.addEventListener("click", () => {
+        closeSidemenu();
+        loadWork(key, filename);
+      });
+      worksSub.appendChild(row);
+    });
+  }
+  sidemenuContent.appendChild(worksSub);
+  worksRow.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = worksSub.classList.toggle("sm-open");
+    worksRow.classList.toggle("sm-open", isOpen);
+  });
+
+  // ---- Emulator ----
+  sidemenuContent.appendChild(makeSectionLabel("Emulator"));
+  const emuRow = makeSmRow("/imgs/icons/raspberry-pi.svg", "emulator", true);
+  sidemenuContent.appendChild(emuRow);
+  const emuSub = document.createElement("div");
+  emuSub.className = "sm-sub";
+  EMULATORS.forEach(emu => {
+    const row = document.createElement("div");
+    row.className = "sm-sub-row" + (emu.name === null ? " sm-remove-emu" : "");
+    row.textContent = emu.label;
+    row.addEventListener("click", () => {
+      closeSidemenu();
+      selectEmulator(emu.name);
+    });
+    emuSub.appendChild(row);
+  });
+  sidemenuContent.appendChild(emuSub);
+  emuRow.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = emuSub.classList.toggle("sm-open");
+    emuRow.classList.toggle("sm-open", isOpen);
+  });
+
+  // ---- Actions ----
+  sidemenuContent.appendChild(makeSectionLabel("Actions"));
+  const refreshRow = makeSmRow("/imgs/icons/refresh.svg", "refresh");
+  refreshRow.addEventListener("click", () => {
+    closeSidemenu();
+    document.getElementById("btn-refresh").click();
+  });
+  sidemenuContent.appendChild(refreshRow);
+
+  const saveRow = makeSmRow("/imgs/icons/content-save.svg", "save");
+  saveRow.addEventListener("click", () => {
+    closeSidemenu();
+    document.getElementById("btn-save").click();
+  });
+  sidemenuContent.appendChild(saveRow);
+
+  const dlRow = makeSmRow("/imgs/icons/download.svg", "download");
+  dlRow.addEventListener("click", () => {
+    closeSidemenu();
+    document.getElementById("btn-download").click();
+  });
+  sidemenuContent.appendChild(dlRow);
+
+  // ---- Links ----
+  sidemenuContent.appendChild(makeSectionLabel("Links"));
+  const linksDiv = document.createElement("div");
+  linksDiv.className = "sm-links";
+  const taLink = document.createElement("a");
+  taLink.href = "https://mz4u.net";
+  taLink.target = "_blank";
+  const taImgDiv = document.createElement("div");
+  taImgDiv.style.cssText = "width:20px;height:20px;background:url(/imgs/icon.png) center/contain no-repeat;flex-shrink:0;";
+  taLink.appendChild(taImgDiv);
+  taLink.appendChild(document.createTextNode("mz4u.net"));
+  linksDiv.appendChild(taLink);
+  const ghLink = document.createElement("a");
+  ghLink.href = "https://github.com/tadfmac/web-pio";
+  ghLink.target = "_blank";
+  const ghImgDiv = document.createElement("div");
+  ghImgDiv.style.cssText = "width:20px;height:20px;background:url(/imgs/github-logo.png) center/contain no-repeat;flex-shrink:0;";
+  ghLink.appendChild(ghImgDiv);
+  ghLink.appendChild(document.createTextNode("GitHub"));
+  linksDiv.appendChild(ghLink);
+  sidemenuContent.appendChild(linksDiv);
 }
 
 // ---- init ----
