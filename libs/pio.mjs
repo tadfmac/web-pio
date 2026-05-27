@@ -180,6 +180,7 @@ class Pio {
     if (!this.midi) {
       if (DEB) console.log("Pio.init() MIDI unavailable (null returned)");
       this.midi = null;
+      return null;
     }
     if (options && options.server != undefined) {
       this.server = options.server;

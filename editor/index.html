@@ -471,6 +471,40 @@ body {
   display:flex;
   gap:10px;
 }
+
+/* ---- Unsupported browser overlay ---- */
+#browser-block {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#browser-block .block-box {
+  background: #fff8e1;
+  border: 2px solid #ff9800;
+  border-radius: 10px;
+  padding: 36px 40px;
+  max-width: 440px;
+  text-align: center;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+}
+
+#browser-block .block-box h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 14px;
+}
+
+#browser-block .block-box p {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.7;
+}
 </style>
 </head>
 <body>
@@ -602,7 +636,22 @@ code
 </div>
 </div>
 
+<!-- unsupported browser overlay -->
+<div id="browser-block">
+<div class="block-box">
+<h2>⚠ Unsupported Browser</h2>
+<p>This browser does not support the Web MIDI API.<br>
+Please use Chrome or a compatible browser.</p>
+</div>
+</div>
+
 <script type="module">
+import { checkmidi } from "/libs/checkmidi.mjs";
+
+if (!checkmidi()) {
+  document.getElementById("browser-block").style.display = "flex";
+}
+
 import {EditorView, basicSetup, javascript} from "/editor/lib/codemirror.bundle.js";
 
 // ---- constants ----
