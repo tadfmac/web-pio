@@ -762,8 +762,10 @@ body {
     max-width: 100%;
   }
 
+  /* モバイルでは splitter-v を水平スプリッター（code ↔ GPIO）として再利用 */
   #splitter-v {
-    display: none;
+    cursor: row-resize;
+    touch-action: none;
   }
 
   #code-panel {
@@ -1399,6 +1401,10 @@ function rebuildRunFrame() {
 }
 
 // ---- layout: initial sizing ----
+// PC レイアウトの初期化が完了したかを示すフラグ。
+// モバイルで起動後 PC サイズへ広げた際に再度 initLayout() を呼ぶために使用する。
+let pcLayoutDone = false;
+
 function initLayout() {
   if (window.innerWidth <= 767) return;
   const mainEl = document.getElementById("main");
@@ -1408,7 +1414,7 @@ function initLayout() {
   const totalH = rect.height;
   const SPLITTER_H = 5;
 
-  // Right column: 42% of total width
+  // Right column: 32% of total width
   const rightW = Math.round(totalW * 0.32);
   document.getElementById("right-col").style.width = rightW + "px";
 
@@ -1416,7 +1422,21 @@ function initLayout() {
   const availH = totalH - SPLITTER_H * 2;
   document.getElementById("gpio-panel").style.height = Math.round(availH * 0.48) + "px";
   document.getElementById("i2c-panel").style.height = Math.round(availH * 0.27) + "px";
+  pcLayoutDone = true;
 }
+
+// モバイルサイズで起動後に PC サイズへ広げた場合、initLayout() が未実行のまま
+// パネル高さがゼロになる問題を修正する。
+// pcLayoutDone が false（= PC 用インラインサイズが未設定）の状態で
+// ウィンドウが PC 幅になった時だけ initLayout() を再実行する。
+// デバウンスを入れず resize ハンドラ内で即座に呼ぶことで、
+// ブラウザが崩れた状態を描画する前にサイズを確定させ、チラつきを防ぐ。
+window.addEventListener("resize", () => {
+  if (pcLayoutDone) return;
+  if (window.innerWidth > 767) {
+    initLayout();
+  }
+});
 
 // ---- layout: drag splitters ----
 // ドラッグ中に全画面を覆う透明オーバーレイ。
@@ -1425,53 +1445,96 @@ const dragOverlay = document.createElement("div");
 dragOverlay.style.cssText = "position:fixed;inset:0;z-index:9999;display:none;";
 document.body.appendChild(dragOverlay);
 
-function makeDragger(splitterEl, {dir, getStart, apply, min, maxFn}) {
-  splitterEl.addEventListener("mousedown", e => {
-    e.preventDefault();
+// dir は文字列 "v"/"h" または () => "v"/"h" の関数どちらでも可
+function makeDragger(splitterEl, opts) {
+  const {getStart, apply, min, maxFn} = opts;
+  const getDir = typeof opts.dir === "function" ? opts.dir : () => opts.dir;
 
-    const startPos = dir === "v" ? e.clientX : e.clientY;
-    const startVal = getStart();
-
+  function startDrag(startPos, startVal) {
+    const dir = getDir();
     splitterEl.classList.add("dragging");
     dragOverlay.style.cursor = dir === "v" ? "col-resize" : "row-resize";
     dragOverlay.style.display = "block";
     document.body.style.userSelect = "none";
 
-    function onMove(ev) {
-      const pos = dir === "v" ? ev.clientX : ev.clientY;
+    function applyPos(pos) {
+      const d = getDir();
       const delta = pos - startPos;
-      const raw = dir === "v" ? startVal - delta : startVal + delta;
+      const raw = d === "v" ? startVal - delta : startVal + delta;
       apply(Math.max(min, Math.min(maxFn(), raw)));
     }
 
-    function onUp() {
+    function onMouseMove(ev) {
+      const d = getDir();
+      applyPos(d === "v" ? ev.clientX : ev.clientY);
+    }
+    function onTouchMove(ev) {
+      ev.preventDefault();
+      const t = ev.touches[0];
+      const d = getDir();
+      applyPos(d === "v" ? t.clientX : t.clientY);
+    }
+
+    function cleanup() {
       splitterEl.classList.remove("dragging");
       dragOverlay.style.display = "none";
       dragOverlay.style.cursor = "";
       document.body.style.userSelect = "";
-      dragOverlay.removeEventListener("mousemove", onMove);
-      dragOverlay.removeEventListener("mouseup", onUp);
+      dragOverlay.removeEventListener("mousemove", onMouseMove);
+      dragOverlay.removeEventListener("mouseup", cleanup);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", cleanup);
     }
 
-    dragOverlay.addEventListener("mousemove", onMove);
-    dragOverlay.addEventListener("mouseup", onUp);
+    dragOverlay.addEventListener("mousemove", onMouseMove);
+    dragOverlay.addEventListener("mouseup", cleanup);
+    // タッチはdragOverlayを通さずdocumentで拾う（iframeを跨ぐ必要がないため）
+    document.addEventListener("touchmove", onTouchMove, {passive: false});
+    document.addEventListener("touchend", cleanup);
+  }
+
+  splitterEl.addEventListener("mousedown", e => {
+    e.preventDefault();
+    const dir = getDir();
+    startDrag(dir === "v" ? e.clientX : e.clientY, getStart());
   });
+
+  splitterEl.addEventListener("touchstart", e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const dir = getDir();
+    startDrag(dir === "v" ? t.clientX : t.clientY, getStart());
+  }, {passive: false});
 }
 
 function initSplitters() {
-  const mainEl   = document.getElementById("main");
-  const rightCol = document.getElementById("right-col");
+  const isMobile = () => window.innerWidth <= 767;
+  const mainEl    = document.getElementById("main");
+  const rightCol  = document.getElementById("right-col");
+  const codePanel = document.getElementById("code-panel");
   const gpioPanel = document.getElementById("gpio-panel");
   const i2cPanel  = document.getElementById("i2c-panel");
-  const SPLITTER = 5;
+  const SPLITTER  = 5;
 
-  // Vertical: code | right
+  // splitter-v:
+  //   PC    → 縦スプリッター（code 幅 ↔ right-col 幅）
+  //   Mobile → 横スプリッター（code 高さ ↔ GPIO 高さ）
   makeDragger(document.getElementById("splitter-v"), {
-    dir: "v",
-    getStart: () => rightCol.getBoundingClientRect().width,
-    apply: v => { rightCol.style.width = v + "px"; },
-    min: 180,
-    maxFn: () => mainEl.getBoundingClientRect().width - 200 - SPLITTER
+    dir: () => isMobile() ? "h" : "v",
+    getStart: () => isMobile()
+      ? codePanel.getBoundingClientRect().height
+      : rightCol.getBoundingClientRect().width,
+    apply: v => {
+      if (isMobile()) {
+        codePanel.style.height = v + "px";
+      } else {
+        rightCol.style.width = v + "px";
+      }
+    },
+    min: 80,
+    maxFn: () => isMobile()
+      ? window.innerHeight * 0.88
+      : mainEl.getBoundingClientRect().width - 200 - SPLITTER
   });
 
   // Horizontal 1: gpio | i2c+log
@@ -1480,7 +1543,9 @@ function initSplitters() {
     getStart: () => gpioPanel.getBoundingClientRect().height,
     apply: v => { gpioPanel.style.height = v + "px"; },
     min: 80,
-    maxFn: () => rightCol.getBoundingClientRect().height - 40 - 60 - SPLITTER * 2
+    maxFn: () => isMobile()
+      ? window.innerHeight * 0.88
+      : rightCol.getBoundingClientRect().height - 40 - 60 - SPLITTER * 2
   });
 
   // Horizontal 2: i2c | log
@@ -1490,6 +1555,7 @@ function initSplitters() {
     apply: v => { i2cPanel.style.height = v + "px"; },
     min: 24,
     maxFn: () => {
+      if (isMobile()) return window.innerHeight * 0.5;
       const rightH = rightCol.getBoundingClientRect().height;
       const gpioH  = gpioPanel.getBoundingClientRect().height;
       return rightH - gpioH - 60 - SPLITTER * 2;
