@@ -6,90 +6,90 @@ const SUPPORTED_DEVICES = {
     svgFile: 'svgs/xiaoRP2040.svg',
     svgRotate: 0,
     leftPins: [
-      {gpio: 26,   label: 'D00', y: 21.0},
-      {gpio: 27,   label: 'D01', y: 31.8},
-      {gpio: 28,   label: 'D02', y: 42.6},
-      {gpio: 29,   label: 'D03', y: 53.5},
-      {gpio: null, label: 'D04', y: 64.3, i2c: 'SDA 0'},
-      {gpio: null, label: 'D05', y: 75.1, i2c: 'SCL 0'},
-      {gpio: 0,    label: 'D06', y: 85.9},
+      {gpio: 26,   label: '26', y: 21.0},
+      {gpio: 27,   label: '27', y: 31.8},
+      {gpio: 28,   label: '28', y: 42.6},
+      {gpio: 29,   label: '29', y: 53.5},
+      {gpio: null, label: '04', y: 64.3, i2c: 'SDA 0'},
+      {gpio: null, label: '05', y: 75.1, i2c: 'SCL 0'},
+      {gpio: 0,    label: '00', y: 85.9},
     ],
     rightPins: [
       {gpio: null, pwr: '5V',   y: 21.0},
       {gpio: null, pwr: 'GND',  y: 31.8},
       {gpio: null, pwr: '3.3V', y: 42.6},
-      {gpio: 3,  label: 'D10', y: 53.5},
-      {gpio: 4,  label: 'D09', y: 64.3},
-      {gpio: 2,  label: 'D08', y: 75.1},
-      {gpio: 1,  label: 'D07', y: 85.8},
+      {gpio: 3,  label: '03', y: 53.5},
+      {gpio: 4,  label: '04', y: 64.3},
+      {gpio: 2,  label: '02', y: 75.1},
+      {gpio: 1,  label: '01', y: 85.8},
     ],
   },
   pio_xiaoRP2350: {
     svgFile: 'svgs/xiaoRP2350.svg',
     svgRotate: 0,
     leftPins: [
-      {gpio: 26,   label: 'D00', y: 21.0},
-      {gpio: 27,   label: 'D01', y: 31.8},
-      {gpio: 28,   label: 'D02', y: 42.6},
-      {gpio: 5,    label: 'D03', y: 53.5},
-      {gpio: null, label: 'D04', y: 64.3, i2c: 'SDA 1'},
-      {gpio: null, label: 'D05', y: 75.1, i2c: 'SCL 1'},
-      {gpio: 0,    label: 'D06', y: 85.9},
+      {gpio: 26,   label: '26', y: 21.0},
+      {gpio: 27,   label: '27', y: 31.8},
+      {gpio: 28,   label: '28', y: 42.6},
+      {gpio: 5,    label: '05', y: 53.5},
+      {gpio: null, label: '04', y: 64.3, i2c: 'SDA 1'},
+      {gpio: null, label: '05', y: 75.1, i2c: 'SCL 1'},
+      {gpio: 0,    label: '00', y: 85.9},
     ],
     rightPins: [
       {gpio: null, pwr: '5V',   y: 21.0},
       {gpio: null, pwr: 'GND',  y: 31.8},
       {gpio: null, pwr: '3.3V', y: 42.6},
-      {gpio: 3,  label: 'D10', y: 53.5},
-      {gpio: 4,  label: 'D09', y: 64.3},
-      {gpio: 2,  label: 'D08', y: 75.1},
-      {gpio: 1,  label: 'D07', y: 85.8},
+      {gpio: 3,  label: '03', y: 53.5},
+      {gpio: 4,  label: '04', y: 64.3},
+      {gpio: 2,  label: '02', y: 75.1},
+      {gpio: 1,  label: '01', y: 85.8},
     ],
   },
   pio_xiaoESP32C6: {
     svgFile: 'svgs/xiaoESP32C6.svg',
     svgRotate: 90,
     leftPins: [
-      {gpio: 0,    label: 'D00', y: 21.0},
-      {gpio: 1,    label: 'D01', y: 31.8},
-      {gpio: 2,    label: 'D02', y: 42.6},
-      {gpio: 21,   label: 'D03', y: 53.5},
-      {gpio: null, label: 'D04', y: 64.3, i2c: 'SDA 0'},
-      {gpio: null, label: 'D05', y: 75.1, i2c: 'SCL 0'},
-      {gpio: 16,   label: 'D06', y: 85.9},
+      {gpio: 0,    label: '00', y: 21.0},
+      {gpio: 1,    label: '01', y: 31.8},
+      {gpio: 2,    label: '02', y: 42.6},
+      {gpio: 21,   label: '21', y: 53.5},
+      {gpio: null, label: '04', y: 64.3, i2c: 'SDA 0'},
+      {gpio: null, label: '05', y: 75.1, i2c: 'SCL 0'},
+      {gpio: 16,   label: '16', y: 85.9},
     ],
     rightPins: [
       {gpio: null, pwr: '5V',   y: 21.0},
       {gpio: null, pwr: 'GND',  y: 31.8},
       {gpio: null, pwr: '3.3V', y: 42.6},
-      {gpio: 18, label: 'D10', y: 53.5},
-      {gpio: 20, label: 'D09', y: 64.3},
-      {gpio: 19, label: 'D08', y: 75.1},
-      {gpio: 17, label: 'D07', y: 85.8},
+      {gpio: 18, label: '18', y: 53.5},
+      {gpio: 20, label: '20', y: 64.3},
+      {gpio: 19, label: '19', y: 75.1},
+      {gpio: 17, label: '17', y: 85.8},
     ],
   },
   pio_RaspiPico: {
     svgFile: 'svgs/raspiPico.svg',
     svgRotate: 0,
     leftPins: [
-      {gpio: 0,    label: 'GP00', y: 6.4},
-      {gpio: 1,    label: 'GP01', y: 11.1},
-      {gpio: null, pwr: 'GND',   y: 15.8}, // pin3
-      {gpio: 2,    label: 'GP02', y: 20.7},
-      {gpio: 3,    label: 'GP03', y: 25.5},
-      {gpio: 4,    label: 'GP04', y: 30.3},
-      {gpio: 5,    label: 'GP05', y: 35.0},
-      {gpio: null, pwr: 'GND',   y: 39.7}, // pin8
-      {gpio: 6,    label: 'GP06', y: 44.7},
-      {gpio: 7,    label: 'GP07', y: 49.5},
-      {gpio: 8,    label: 'GP08', y: 54.3},
-      {gpio: 9,    label: 'GP09', y: 59.0},
-      {gpio: null, pwr: 'GND',   y: 63.7}, // pin13
-      {gpio: 10,   label: 'GP10', y: 68.7},
-      {gpio: 11,   label: 'GP11', y: 73.4},
-      {gpio: 12,   label: 'GP12', y: 78.3},
-      {gpio: 13,   label: 'GP13', y: 83.0},
-      {gpio: null, pwr: 'GND',   y: 87.7}, // pin18
+      {gpio: 0,    label: '00', y: 6.4},
+      {gpio: 1,    label: '01', y: 11.1},
+      {gpio: null, pwr: 'GND',  y: 15.8}, // pin3
+      {gpio: 2,    label: '02', y: 20.7},
+      {gpio: 3,    label: '03', y: 25.5},
+      {gpio: 4,    label: '04', y: 30.3},
+      {gpio: 5,    label: '05', y: 35.0},
+      {gpio: null, pwr: 'GND',  y: 39.7}, // pin8
+      {gpio: 6,    label: '06', y: 44.7},
+      {gpio: 7,    label: '07', y: 49.5},
+      {gpio: 8,    label: '08', y: 54.3},
+      {gpio: 9,    label: '09', y: 59.0},
+      {gpio: null, pwr: 'GND',  y: 63.7}, // pin13
+      {gpio: 10,   label: '10', y: 68.7},
+      {gpio: 11,   label: '11', y: 73.4},
+      {gpio: 12,   label: '12', y: 78.3},
+      {gpio: 13,   label: '13', y: 83.0},
+      {gpio: null, pwr: 'GND',  y: 87.7}, // pin18
       {gpio: null, i2c: 'SDA 1', y: 92.7}, // GP14 Wire1 SDA
       {gpio: null, i2c: 'SCL 1', y: 97.4}, // GP15 Wire1 SCL
     ],
@@ -97,17 +97,17 @@ const SUPPORTED_DEVICES = {
       {gpio: null, pwr: '5V',   y: 6.4},  // VBUS  pin40 (VSYS/pin39 skip)
       {gpio: null, pwr: 'GND',  y: 15.8}, // GND   pin38 (3V3_EN/pin37 skip)
       {gpio: null, pwr: '3.3V', y: 25.2}, // 3V3   pin36 (ADC_VREF/pin35 skip)
-      {gpio: 28,   label: 'GP28', y: 35.0},
-      {gpio: null, pwr: 'GND',   y: 39.7}, // pin33
-      {gpio: 27,   label: 'GP27', y: 44.7},
-      {gpio: 26,   label: 'GP26', y: 49.5},
-      {gpio: 22,   label: 'GP22', y: 59.1},
-      {gpio: null, pwr: 'GND',   y: 63.8}, // pin28
-      {gpio: 21,   label: 'GP21', y: 68.7},
-      {gpio: 20,   label: 'GP20', y: 73.4},
-      {gpio: 19,   label: 'GP19', y: 78.2},
-      {gpio: 18,   label: 'GP18', y: 83.0},
-      {gpio: null, pwr: 'GND',   y: 87.7}, // pin23
+      {gpio: 28,   label: '28', y: 35.0},
+      {gpio: null, pwr: 'GND',  y: 39.7}, // pin33
+      {gpio: 27,   label: '27', y: 44.7},
+      {gpio: 26,   label: '26', y: 49.5},
+      {gpio: 22,   label: '22', y: 59.1},
+      {gpio: null, pwr: 'GND',  y: 63.8}, // pin28
+      {gpio: 21,   label: '21', y: 68.7},
+      {gpio: 20,   label: '20', y: 73.4},
+      {gpio: 19,   label: '19', y: 78.2},
+      {gpio: 18,   label: '18', y: 83.0},
+      {gpio: null, pwr: 'GND',  y: 87.7}, // pin23
       {gpio: null, i2c: 'SCL 0', y: 92.7}, // GP17 Wire SCL
       {gpio: null, i2c: 'SDA 0', y: 97.4}, // GP16 Wire SDA
     ],
@@ -116,24 +116,24 @@ const SUPPORTED_DEVICES = {
     svgFile: 'svgs/raspiPico2.svg',
     svgRotate: 0,
     leftPins: [
-      {gpio: 0,    label: 'GP00', y: 6.4},
-      {gpio: 1,    label: 'GP01', y: 11.1},
-      {gpio: null, pwr: 'GND',   y: 15.8}, // pin3
-      {gpio: 2,    label: 'GP02', y: 20.7},
-      {gpio: 3,    label: 'GP03', y: 25.5},
-      {gpio: 4,    label: 'GP04', y: 30.3},
-      {gpio: 5,    label: 'GP05', y: 35.0},
-      {gpio: null, pwr: 'GND',   y: 39.7}, // pin8
-      {gpio: 6,    label: 'GP06', y: 44.7},
-      {gpio: 7,    label: 'GP07', y: 49.5},
-      {gpio: 8,    label: 'GP08', y: 54.3},
-      {gpio: 9,    label: 'GP09', y: 59.0},
-      {gpio: null, pwr: 'GND',   y: 63.7}, // pin13
-      {gpio: 10,   label: 'GP10', y: 68.7},
-      {gpio: 11,   label: 'GP11', y: 73.4},
-      {gpio: 12,   label: 'GP12', y: 78.3},
-      {gpio: 13,   label: 'GP13', y: 83.0},
-      {gpio: null, pwr: 'GND',   y: 87.7}, // pin18
+      {gpio: 0,    label: '00', y: 6.4},
+      {gpio: 1,    label: '01', y: 11.1},
+      {gpio: null, pwr: 'GND',  y: 15.8}, // pin3
+      {gpio: 2,    label: '02', y: 20.7},
+      {gpio: 3,    label: '03', y: 25.5},
+      {gpio: 4,    label: '04', y: 30.3},
+      {gpio: 5,    label: '05', y: 35.0},
+      {gpio: null, pwr: 'GND',  y: 39.7}, // pin8
+      {gpio: 6,    label: '06', y: 44.7},
+      {gpio: 7,    label: '07', y: 49.5},
+      {gpio: 8,    label: '08', y: 54.3},
+      {gpio: 9,    label: '09', y: 59.0},
+      {gpio: null, pwr: 'GND',  y: 63.7}, // pin13
+      {gpio: 10,   label: '10', y: 68.7},
+      {gpio: 11,   label: '11', y: 73.4},
+      {gpio: 12,   label: '12', y: 78.3},
+      {gpio: 13,   label: '13', y: 83.0},
+      {gpio: null, pwr: 'GND',  y: 87.7}, // pin18
       {gpio: null, i2c: 'SDA 1', y: 92.7}, // GP14 Wire1 SDA
       {gpio: null, i2c: 'SCL 1', y: 97.4}, // GP15 Wire1 SCL
     ],
@@ -141,17 +141,17 @@ const SUPPORTED_DEVICES = {
       {gpio: null, pwr: '5V',   y: 6.4},  // VBUS  pin40 (VSYS/pin39 skip)
       {gpio: null, pwr: 'GND',  y: 15.8}, // GND   pin38 (3V3_EN/pin37 skip)
       {gpio: null, pwr: '3.3V', y: 25.2}, // 3V3   pin36 (ADC_VREF/pin35 skip)
-      {gpio: 28,   label: 'GP28', y: 35.0},
-      {gpio: null, pwr: 'GND',   y: 39.7}, // pin33
-      {gpio: 27,   label: 'GP27', y: 44.7},
-      {gpio: 26,   label: 'GP26', y: 49.5},
-      {gpio: 22,   label: 'GP22', y: 59.1},
-      {gpio: null, pwr: 'GND',   y: 63.8}, // pin28
-      {gpio: 21,   label: 'GP21', y: 68.7},
-      {gpio: 20,   label: 'GP20', y: 73.4},
-      {gpio: 19,   label: 'GP19', y: 78.2},
-      {gpio: 18,   label: 'GP18', y: 83.0},
-      {gpio: null, pwr: 'GND',   y: 87.7}, // pin23
+      {gpio: 28,   label: '28', y: 35.0},
+      {gpio: null, pwr: 'GND',  y: 39.7}, // pin33
+      {gpio: 27,   label: '27', y: 44.7},
+      {gpio: 26,   label: '26', y: 49.5},
+      {gpio: 22,   label: '22', y: 59.1},
+      {gpio: null, pwr: 'GND',  y: 63.8}, // pin28
+      {gpio: 21,   label: '21', y: 68.7},
+      {gpio: 20,   label: '20', y: 73.4},
+      {gpio: 19,   label: '19', y: 78.2},
+      {gpio: 18,   label: '18', y: 83.0},
+      {gpio: null, pwr: 'GND',  y: 87.7}, // pin23
       {gpio: null, i2c: 'SCL 0', y: 92.7}, // GP17 Wire SCL
       {gpio: null, i2c: 'SDA 0', y: 97.4}, // GP16 Wire SDA
     ],
