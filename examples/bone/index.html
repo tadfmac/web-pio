@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
+    <meta name="description" content="physical-io test" />
+    <title>web-pio example</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      main {
+        width: 100%;
+        margin: 0px;
+        padding: 10px;
+      }
+      footer {
+        position: fixed;
+        bottom: 0px;
+        left: 0px;
+        text-align: center;
+        width: 100%;
+        background-color: pink;
+      }
+      #log {
+        padding: 10px;
+        width: 100%;
+        height: 300px;
+        overflow: scroll;
+        border: solid 1px black;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 id="logo">web-pio example</h1>
+    </header>
+    <main>
+      <section>
+        <h3>log</h3>
+        <div id="log"></div>
+      </section>
+    </main>
+    <footer>Made with <a href="https://github.com/tadfmac/web-pio">web-pio</a></footer>
+    <script type="module">
+      import "./bone.mjs";
+      import logger from "./logger.mjs";
+      const $log = document.querySelector("#log");
+      new logger($log);
+    </script>
+  </body>
+</html>

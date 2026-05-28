@@ -964,6 +964,7 @@ Please use Chrome or a compatible browser.</p>
 
 <script type="module">
 import { checkmidi } from "/src/checkmidi.mjs";
+import savezip from "./savezip.mjs";
 
 if (!checkmidi()) {
   document.getElementById("browser-block").style.display = "flex";
@@ -1091,12 +1092,16 @@ ddCat.querySelectorAll(".dd-item").forEach(item => {
   });
 });
 
+function stripHeaderComment(code) {
+  return code.replace(/^(\/\/[^\n]*\n)+/, "").trimStart();
+}
+
 async function loadExample(cat, name) {
   const path = `examples/js/${cat}/${name}.mjs`;
   try {
     const res = await fetch(`/${path}`);
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const code = await res.text();
+    const code = stripHeaderComment(await res.text());
     currentFilePath = path;
     currentFileName = `${name}.mjs`;
     filenameDisp.textContent = currentFileName;
@@ -1254,8 +1259,7 @@ function doSave() {
   if (localStorage.getItem(key) !== null) {
     if (!confirm(`"${filename}" already exists. Overwrite?`)) return;
   }
-  // code と filePath を JSON で保存する。
-  // ロード時に filePath を復元することで相対 import の解決が正確になる。
+  // Persist code and filePath as JSON so relative imports resolve correctly on load.
   localStorage.setItem(key, JSON.stringify({code: getCode(), filePath: currentFilePath || ""}));
   currentFileName = filename;
   filenameDisp.textContent = filename;
@@ -1264,12 +1268,14 @@ function doSave() {
 }
 
 // ---- download ----
-document.getElementById("btn-download").addEventListener("click", () => {
-  const blob = new Blob([getCode()], {type: "text/javascript"});
-  const url = URL.createObjectURL(blob);
+document.getElementById("btn-download").addEventListener("click", async () => {
+  const filename = currentFileName || "script.mjs";
+  const name = filename.replace(/\.mjs$/i, "");
+  const zip = await savezip.make(name, getCode());
+  const url = URL.createObjectURL(new Blob([zip], {type: "application/zip"}));
   const a = document.createElement("a");
   a.href = url;
-  a.download = currentFileName || "script.mjs";
+  a.download = `${name}.zip`;
   a.click();
   URL.revokeObjectURL(url);
 });
