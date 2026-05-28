@@ -8,7 +8,8 @@
     "start": "node ./app.mjs",
     "server": "pm2 delete web-pio; npm i; pm2 start ./app.mjs --name web-pio",
     "format": "prettier --write \"src/**/*.mjs\" \"examples/**/*.{mjs,html}\"",
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "postinstall": "node build.mjs"
   },
   "author": "D.F.Mac. @TripArts Music",
   "license": "MIT",
