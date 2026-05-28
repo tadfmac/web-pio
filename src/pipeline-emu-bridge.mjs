@@ -2,9 +2,9 @@
 //
 // ©2025 by D.F.Mac. @TripArts Music
 //
-// bridge client 向け pipeline。
-// pipeline-midi.mjs / pipeline-emu.mjs と同一インターフェースを持ち、
-// bridge iframe への postMessage でコマンドを転送する。
+// Pipeline for bridge client.
+// Has the same interface as pipeline-midi.mjs / pipeline-emu.mjs,
+// and forwards commands via postMessage to the bridge iframe.
 //
 // Version:
 // - 2025.05.25 start writing
@@ -23,7 +23,7 @@ class PipelineBridge {
 
   init(targetWindow) {
     if (DEB) console.log("PipelineBridge.init()");
-    // 既存の pending をすべてキャンセル（iframe リロード対応）
+    // cancel all existing pending requests (to handle iframe reload)
     for (const id in this.pendingMap) {
       clearTimeout(this.pendingMap[id].timer);
       this.pendingMap[id].resolve(null);
@@ -148,7 +148,7 @@ class PipelineBridge {
     }
   }
 
-  // I2C スタブ（将来対応）
+  // I2C stub (future support)
   registerAddrClose(device, feat, port, address, func) {}
   removeAddrClose(device, feat, port, address) {}
   clearAddrCloseQueue(device) {}

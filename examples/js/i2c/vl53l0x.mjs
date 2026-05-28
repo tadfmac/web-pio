@@ -2,7 +2,7 @@
 // vl53l0x.mjs
 // ©2025-2026 by D.F.Mac. @TripArts Music
 
-import Pio from "../../../libs/pio.mjs";
+import Pio from "../../../dist/pio.min.mjs";
 import VL53l0X from "../../../deps/drivers/vl53l0x.js";
 
 let pio = new Pio();

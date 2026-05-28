@@ -963,7 +963,7 @@ Please use Chrome or a compatible browser.</p>
 </div>
 
 <script type="module">
-import { checkmidi } from "/libs/checkmidi.mjs";
+import { checkmidi } from "/src/checkmidi.mjs";
 
 if (!checkmidi()) {
   document.getElementById("browser-block").style.display = "flex";
@@ -1308,14 +1308,15 @@ window.addEventListener("message", e => {
 function transformImports(code, filePath) {
   const origin = window.location.origin;
   // filePath がない場合はルート "/" をベースにする。
-  // ブラウザの URL 正規化により "../../../libs/pio.mjs" → "/libs/pio.mjs" に解決される。
+  // ブラウザの URL 正規化により "../../../src/pio.mjs" → "/src/pio.mjs" に解決される。
   const dir = filePath ? filePath.replace(/[^/]+$/, "") : "";
   const base = `${origin}/${dir}`;
   return code.replace(
-    /(\bfrom\s+["'])(\.\.?\/[^"'\s]+)(["'])/g,
+    /(\bfrom\s+["'])((?:\.\.?\/|\/)[^"'\s]+)(["'])/g,
     (_, pre, rel, post) => {
       try {
-        return pre + new URL(rel, base).href + post;
+        const resolveBase = rel.startsWith("/") ? origin : base;
+        return pre + new URL(rel, resolveBase).href + post;
       } catch (_e) {
         return pre + rel + post;
       }
@@ -1327,8 +1328,8 @@ function transformImports(code, filePath) {
 function generateSrcdoc(code, emulator, filePath) {
   const transformed = transformImports(code, filePath);
   const origin = window.location.origin;
-  const pioUrl = JSON.stringify(origin + "/libs/pio.mjs");
-  const bcdUrl = JSON.stringify(origin + "/libs/emulator-bridge-devices.mjs");
+  const pioUrl = JSON.stringify(origin + "/dist/pio.min.mjs");
+  const bcdUrl = JSON.stringify(origin + "/src/emulator-bridge-devices.mjs");
   const codeJson = JSON.stringify(transformed);
   const emuJson = JSON.stringify(emulator || "");
 

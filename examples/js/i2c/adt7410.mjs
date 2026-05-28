@@ -2,7 +2,7 @@
 // adt7410.mjs
 // ©2025-2026 by D.F.Mac. @TripArts Music
 
-import Pio from "../../../libs/pio.mjs";
+import Pio from "../../../dist/pio.min.mjs";
 import ADT7410 from "../../../deps/drivers/adt7410.js";
 
 let pio = new Pio();

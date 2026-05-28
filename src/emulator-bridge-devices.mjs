@@ -2,9 +2,9 @@
 //
 // ©2025 by D.F.Mac. @TripArts Music
 //
-// bridge client 側のデバイス管理。
-// emulator-devices.mjs と同一インターフェースを持ち、
-// addDevice/removeDevice が bridge iframe に postMessage でデバイス登録を通知する。
+// Device management for the bridge client side.
+// Has the same interface as emulator-devices.mjs;
+// addDevice/removeDevice notifies the bridge iframe of device registration via postMessage.
 //
 // Version:
 // - 2025.05.25 start writing
@@ -19,7 +19,7 @@ const c = devList.getConst();
 const DEB = false;
 
 // ---------------------------------------------------------------------------
-// BridgeClientDevice — MIDIDevice / EmulatorDevice 相当の単一デバイス抽象
+// BridgeClientDevice — single device abstraction equivalent to MIDIDevice / EmulatorDevice
 // ---------------------------------------------------------------------------
 
 class BridgeClientDevice {
@@ -42,7 +42,7 @@ class BridgeClientDevice {
       console.error("BridgeClientDevice.init() unsupported device name=" + name);
       return null;
     }
-    // pipeline を bridge 用に設定
+    // configure pipeline for bridge use
     this.conf.pipeline = pipelineBridge;
     this.gpioAccess = new GPIOAccess();
     this.gpioAccess.init(this.conf);
@@ -96,7 +96,7 @@ class BridgeClientDevices {
     this.onChangeFunc = func;
   }
 
-  // デバイスを追加する。bridge 側に REGISTER_DEVICE を送り ACK を待つ。
+  // Add a device. Send REGISTER_DEVICE to the bridge side and wait for ACK.
   async addDevice(name) {
     if (DEB) console.log("BridgeClientDevices.addDevice() name=" + name);
     const prefix = name.split("-")[0];
@@ -109,7 +109,7 @@ class BridgeClientDevices {
       return null;
     }
 
-    // REGISTER_DEVICE を bridge に送り、デバイス固有の ACK を待つ
+    // Send REGISTER_DEVICE to the bridge and wait for a device-specific ACK
     const ackPromise = new Promise((resolve) => {
       const timer = setTimeout(() => {
         window.removeEventListener("message", handler);
@@ -152,7 +152,7 @@ class BridgeClientDevices {
     return device;
   }
 
-  // デバイスを削除する。bridge 側に REMOVE_DEVICE を送る。
+  // Remove a device. Send REMOVE_DEVICE to the bridge side.
   removeDevice(name) {
     if (DEB) console.log("BridgeClientDevices.removeDevice() name=" + name);
     if (!(name in this.devices)) {

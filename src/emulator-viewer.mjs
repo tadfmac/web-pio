@@ -1,6 +1,6 @@
 const BASE_URL = new URL('.', import.meta.url).href;
 
-// gpio: null のピンは I2C 専用（GPIO 制御不可）。i2c プロパティで SDA/SCL バッジを表示する。
+// Pins with gpio: null are I2C-only (GPIO control not available). The i2c property displays SDA/SCL badges.
 const SUPPORTED_DEVICES = {
   pio_xiaoRP2040: {
     svgFile: 'svgs/xiaoRP2040.svg',
@@ -175,7 +175,7 @@ export class emuViewer {
 
   async init() {
     const config = this._config;
-    // gpio: null のピン（I2C専用）は pinStates に登録しない
+    // pins with gpio: null (I2C-only) are not registered in pinStates
     [...config.leftPins, ...config.rightPins].forEach(pin => {
       if (pin.gpio !== null) {
         this._pinStates.set(pin.gpio, {direction: 'none', value: null});
@@ -217,9 +217,9 @@ export class emuViewer {
 
     this._updatePinDisplay(pinNum);
 
-    // oldValue === null は「未エクスポート → 初期化」の遷移。
-    // 実機と同様に export() 直後は onchange を発火しない。
-    // 実際にユーザーが入力値を変化させたときのみ発火する。
+    // oldValue === null represents the "not exported → initialized" transition.
+    // onchange is not fired immediately after export(), just like on real hardware.
+    // It fires only when the user actually changes the input value.
     if (this.onGPIOChange &&
         (direction === 'in' || direction === 'in-pullup') &&
         normalized !== oldValue &&
@@ -241,7 +241,7 @@ export class emuViewer {
     return result;
   }
 
-  // gpio: null ピン（I2C専用）は返さない
+  // pins with gpio: null (I2C-only) are not returned
   getPins() {
     return {
       left:  this._config.leftPins.filter(p => p.gpio !== null).map(p => ({gpio: p.gpio, label: p.label})),
@@ -311,7 +311,7 @@ export class emuViewer {
   }
 
   _measureMaxColWidth() {
-    // GPIO 制御ピン（gpio !== null）の中で最長ラベルを使って計測
+    // measure using the longest label among GPIO-controlled pins (gpio !== null)
     const gpioOnlyPins = [...this._config.leftPins, ...this._config.rightPins].filter(p => p.gpio !== null);
     const maxLabel = gpioOnlyPins.reduce((a, b) => b.label.length > a.label.length ? b : a).label;
 
@@ -425,7 +425,7 @@ export class emuViewer {
       label.style.cssText = 'color:#444;';
 
       if (pin.gpio === null) {
-        // 電源ピン / I2C 専用ピン: バッジのみ表示
+        // Power pin / I2C-only pin: display badge only
         let badge = null;
         if (pin.pwr) {
           badge = this._buildPwrBadge(pin.pwr);
@@ -442,7 +442,7 @@ export class emuViewer {
         continue;
       }
 
-      // GPIO 制御ピン（i2c プロパティがある場合は badge も表示）
+      // GPIO-controlled pin (also display badge if i2c property is present)
       const i2cBadge = pin.i2c ? this._buildI2CBadge(pin.i2c) : null;
 
       const dirBadge = document.createElement('span');

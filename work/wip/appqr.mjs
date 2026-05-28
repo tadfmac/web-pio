@@ -1,4 +1,4 @@
-import Pio from "../../libs/pio.mjs";
+import Pio from "../../src/pio.mjs";
 import QR from "./qr.js";
 
 let pio = new Pio();

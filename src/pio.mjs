@@ -134,25 +134,25 @@ class Pio {
     this.targetPrefixes = {};
     this.devConf = new DevConf();
     this.emuDevices = null;
-    // onFoundFunc に渡した devices 配列の参照。後から接続されたデバイスはここに追加して
-    // onFoundFunc を再呼び出しせずに済むようにする。デバイスが一つでも leave したらリセット。
+    // Reference to the devices array passed to onFoundFunc. Devices connected later are added here
+    // to avoid calling onFoundFunc again. Reset when any device leaves.
     this._currentDevices = null;
   }
   async init(options) {
     // options = {server:url, mode:"emulator"|"bridge"}
-    // mode 未指定: MIDI + bridge 自動検出（ブラウザのみ）
-    // Node.js 環境では mode に関わらず MIDI のみ有効
+    // mode not specified: MIDI + bridge auto-detection (browser only)
+    // In Node.js environment, only MIDI is available regardless of mode
     if (DEB) console.log("Pio.init()");
     if (DEB) console.dir(options);
 
     const mode = options && options.mode;
     const isNode = typeof window === "undefined";
 
-    // bridge モード（ブラウザのみ）: MIDI 初期化なし、postMessage ホストとして動作
+    // bridge mode (browser only): no MIDI initialization, operates as postMessage host
     if (mode === "bridge") {
       if (isNode) {
         console.warn("Pio.init() bridge mode is not supported in Node.js. Use MIDI only.");
-        // bridge モードは Node.js 非対応のため null を返す
+        // bridge mode is not supported in Node.js, so return null
         return null;
       }
       try {
@@ -166,7 +166,7 @@ class Pio {
       return this;
     }
 
-    // MIDI 初期化（emulator / 無指定 / Node.js モード共通）
+    // MIDI initialization (common for emulator / unspecified / Node.js modes)
     if (mode === "emulator" && isNode) {
       console.warn("Pio.init() emulator mode is not supported in Node.js. Falling back to MIDI only.");
     }
@@ -176,7 +176,7 @@ class Pio {
       console.log("Pio.init() error = " + e);
       return null;
     }
-    // pomidi.init() が内部でエラーを catch して null を返す場合への対応
+    // handle the case where pomidi.init() internally catches an error and returns null
     if (!this.midi) {
       if (DEB) console.log("Pio.init() MIDI unavailable (null returned)");
       this.midi = null;
@@ -186,7 +186,7 @@ class Pio {
       this.server = options.server;
     }
 
-    // emulator モード（ブラウザのみ）
+    // emulator mode (browser only)
     if (mode === "emulator" && !isNode) {
       try {
         const { default: emuDev } = await import("./emulator-devices.mjs");
@@ -204,7 +204,7 @@ class Pio {
       plmidi.init(this.midi);
     }
 
-    // 無指定モード（ブラウザのみ）: bridge iframe の自動検出
+    // unspecified mode (browser only): auto-detect bridge iframe
     if (!mode && !isNode) {
       try {
         const bridgeWin = await this._detectBridge();
@@ -245,7 +245,7 @@ class Pio {
       };
       window.addEventListener("message", handler);
 
-      // 既存フレームに PING を送る（iframe が先に初期化済みの場合に対応）
+      // send PING to existing frames (to handle the case where the iframe is already initialized)
       for (let i = 0; i < window.frames.length; i++) {
         try {
           window.frames[i].postMessage({ type: "pio-bridge", cmd: "PING" }, "*");
@@ -301,7 +301,7 @@ class Pio {
   }
   _expireOnLeaveEvent(leaveDevices) {
     if (DEB) console.log("Pio._expireOnLeaveEvent()");
-    // デバイスが離脱したら _currentDevices をリセット。次の接続で onFoundFunc が再呼び出しされる
+    // reset _currentDevices when a device leaves. onFoundFunc will be called again on the next connection
     this._currentDevices = null;
     if (this.onLeaveFunc != null) {
       let devices = [];
@@ -371,7 +371,7 @@ class Pio {
     }
 
     if (this.onFoundFunc != null) {
-      // 今回 found されたデバイスをフィルタして newDevices に積む
+      // filter devices found this time and add them to newDevices
       let newDevices = [];
       if (Object.keys(this.targetPrefixes).length > 0) {
         for (let cnt = 0; cnt < foundDevices.length; cnt++) {
@@ -391,12 +391,12 @@ class Pio {
       if (newDevices.length === 0) return;
 
       if (this._currentDevices === null) {
-        // 初回: 配列を作って onFoundFunc を呼ぶ
+        // first time: create the array and call onFoundFunc
         this._currentDevices = newDevices;
         this.onFoundFunc(this._currentDevices);
       } else {
-        // 既に onFoundFunc 呼び済み: 同じ配列にデバイスを追加するだけ
-        // ループ内の devices[0] は変わらず最初のデバイスを指し続ける
+        // onFoundFunc already called: just add devices to the same array
+        // devices[0] inside the loop continues to point to the first device unchanged
         for (const dev of newDevices) {
           if (!this._currentDevices.includes(dev)) {
             this._currentDevices.push(dev);
@@ -448,7 +448,7 @@ class Pio {
     }
     for (let device in this.devices) {
       if (DEB) console.log("device=" + device);
-      // エミュレータデバイスは MIDI デバイスリストに存在しないため leave 検出対象外
+      // emulator devices do not exist in the MIDI device list, so they are excluded from leave detection
       if (this.devices[device].type === c.DEVICE_TYPE_EMU) continue;
       let isActive = false;
       for (let cnt = 0; cnt < devices.length; cnt++) {
@@ -485,14 +485,14 @@ class Pio {
     const leaveDevices = [];
     const foundDevices = [];
 
-    // emuList に存在するデバイスを found として処理
+    // process devices present in emuList as found
     for (const emuDev of emuList) {
       if (!(emuDev.name in this.devices)) {
-        // 新規デバイス
+        // new device
         this.devices[emuDev.name] = emuDev;
         foundDevices.push(emuDev.name);
       } else {
-        // 既存エントリを最新の EmulatorDevice インスタンスで更新
+        // update existing entry with the latest EmulatorDevice instance
         this.devices[emuDev.name] = emuDev;
         if (!emuDev.isActive) {
           foundDevices.push(emuDev.name);
@@ -500,8 +500,8 @@ class Pio {
       }
     }
 
-    // Pio.devices に残る EMU デバイスで emuList にないものを leave として処理
-    // MIDIパスと対称に、ここで suspend() を呼んでから leaveDevices に積む
+    // process EMU devices remaining in Pio.devices that are no longer in emuList as leave
+    // symmetric with the MIDI path: call suspend() here before pushing to leaveDevices
     for (const name in this.devices) {
       if (this.devices[name].type === c.DEVICE_TYPE_EMU) {
         const stillExists = emuList.some((d) => d.name === name);
@@ -522,7 +522,7 @@ class Pio {
     if (DEB) console.dir(this.devices);
   }
   _onChangeIP() {
-    // そのうち書く
+    // to be implemented later
   }
   async wait(time) {
     return new Promise((resolve) => setTimeout(resolve, time));

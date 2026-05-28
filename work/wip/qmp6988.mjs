@@ -11,7 +11,7 @@ qmp6988 test
 
 const I2CADDR_QMP6988 = 0x70;
 
-import Pio from "../../libs/pio.mjs";
+import Pio from "../../src/pio.mjs";
 import QMP6988 from "./qmp6988.js";
 
 let pio = new Pio();

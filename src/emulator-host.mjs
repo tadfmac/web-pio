@@ -2,10 +2,10 @@
 //
 // ©2025 by D.F.Mac. @TripArts Music
 //
-// bridge モード（iframe 側）で使用するホストモジュール。
-// 親ウィンドウからの postMessage コマンドを受信し、
-// pipelineEmu / emulator-devices に委譲する。
-// GPIO 変化イベントは親ウィンドウに転送する。
+// Host module used in bridge mode (iframe side).
+// Receives postMessage commands from the parent window
+// and delegates them to pipelineEmu / emulator-devices.
+// GPIO change events are forwarded to the parent window.
 //
 // Version:
 // - 2025.05.25 start writing
@@ -20,7 +20,7 @@ class EmuHost {
     if (DEB) console.log("EmuHost.constructor()");
     this.parentWindow = null;
     this.containerEl = null;
-    this.deviceDoms = {};  // device name → dom element
+    this.deviceDoms = {};  // device name → DOM element
     this._listener = null;
   }
 
@@ -28,7 +28,7 @@ class EmuHost {
     if (DEB) console.log("EmuHost.init()");
     this.parentWindow = window.parent !== window ? window.parent : null;
 
-    // コンテナを探す or 作成する
+    // find or create the container
     let container = document.getElementById("emu-container");
     if (!container) {
       container = document.createElement("div");
@@ -37,11 +37,11 @@ class EmuHost {
     }
     this.containerEl = container;
 
-    // postMessage リスナーを設定
+    // set up postMessage listener
     this._listener = this._onMessage.bind(this);
     window.addEventListener("message", this._listener);
 
-    // 親に READY を送出（親が先に初期化済みで待機している場合に対応）
+    // send READY to parent (to handle the case where the parent is already initialized and waiting)
     if (this.parentWindow) {
       this.parentWindow.postMessage({ type: "pio-bridge", cmd: "READY" }, "*");
     }
@@ -54,14 +54,14 @@ class EmuHost {
 
     switch (msg.cmd) {
       case "PING":
-        // 親が PING を送ってきた場合: READY で応答し parentWindow を登録
+        // When parent sends PING: respond with READY and register parentWindow
         if (!this.parentWindow) {
           this.parentWindow = event.source;
         }
         event.source.postMessage({ type: "pio-bridge", cmd: "READY" }, "*");
         break;
       case "HANDSHAKE_ACK":
-        // ACK 受信 — ハンドシェイク完了（現状は記録のみ）
+        // ACK received — handshake complete (currently just records it)
         if (!this.parentWindow) {
           this.parentWindow = event.source;
         }
@@ -126,6 +126,7 @@ class EmuHost {
   _handleRemoveDevice(msg) {
     if (DEB) console.log("EmuHost._handleRemoveDevice() device=" + msg.device);
     const name = msg.device;
+    if (!(name in emuDevices.devices)) return;
     emuDevices.removeDevice(name);
     const dom = this.deviceDoms[name];
     if (dom && dom.parentNode) {

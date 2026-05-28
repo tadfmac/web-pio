@@ -1,4 +1,4 @@
-import Pio from "../../libs/pio.mjs";
+import Pio from "../../src/pio.mjs";
 import BH1745NCU from "./bh1745ncu.js";
 
 let pio = new Pio();

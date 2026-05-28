@@ -2,9 +2,9 @@
 //
 // ©2025 by D.F.Mac. @TripArts Music
 //
-// エミュレータデバイス向け pipeline。
-// pipeline-midi.mjs と同一インターフェースを持ち、
-// MIDI通信の代わりに emuViewer のメモリ内状態を操作する。
+// Pipeline for emulator devices.
+// Has the same interface as pipeline-midi.mjs,
+// and manipulates emuViewer's in-memory state instead of MIDI communication.
 //
 // Version:
 // - 2025.05.25 start writing
@@ -34,8 +34,8 @@ class PipelineEmu {
     this.viewers[device] = viewer;
     this.eventQueues[device] = {};
     viewer.setOnGPIOChange((_deviceName, pinNum, direction, value) => {
-      // _deviceName は emuViewer 内部の prefix 名 (e.g. "pio_xiaoRP2040")
-      // device はクロージャで保持する完全名 (e.g. "pio_xiaoRP2040-emu1")
+      // _deviceName is the prefix name inside emuViewer (e.g. "pio_xiaoRP2040")
+      // device is the full name held in the closure (e.g. "pio_xiaoRP2040-emu1")
       const key = "" + ((F.GPIO_ONCHANGE << 8) | pinNum);
       const q = this.eventQueues[device];
       if (q && key in q) {
@@ -95,7 +95,7 @@ class PipelineEmu {
         return [1, val & 0xff, (val >> 8) & 0xff];
       }
       default:
-        // I2C 系は将来対応。現状 null を返しエラー扱いにする。
+        // I2C features are for future support. Currently return null to treat as an error.
         if (DEB) console.log("PipelineEmu.send() unsupported feat=0x" + feat.toString(16));
         return null;
     }
@@ -123,7 +123,7 @@ class PipelineEmu {
         break;
       }
       default:
-        // I2C write 系スタブ: 何もしない
+        // I2C write stub: do nothing
         if (DEB) console.log("PipelineEmu.sendFire() unsupported feat=0x" + feat.toString(16));
         break;
     }
@@ -151,7 +151,7 @@ class PipelineEmu {
     this.eventQueues[device] = {};
   }
 
-  // I2C 用スタブ（将来対応）
+  // I2C stub (future support)
   registerAddrClose(device, feat, port, address, func) {}
   removeAddrClose(device, feat, port, address) {}
   clearAddrCloseQueue(device) {}

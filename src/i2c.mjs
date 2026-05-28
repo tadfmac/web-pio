@@ -64,8 +64,8 @@ class I2CPort extends EventTarget {
   _suspend() {
     if (DEB) console.log("I2CPort._suspend() port=" + this.portNumber);
     this.isActive = false;
-    // I2CAccess._suspend() で suspend時の addrClose callbackの全消去を行うのでここではやらない
-    // 現状個別にport(bus)単位でcloseできる仕様ではないため。(openしたらdeviceの電源OFFまでopen)
+    // I2CAccess._suspend() handles clearing all addrClose callbacks on suspend, so skip it here
+    // Currently there is no spec to close individual ports (buses). (Once opened, stays open until device power-off)
     //    for(let dev in this.i2cDevices){
     //      dev._suspend();
     //    }
@@ -113,12 +113,12 @@ class I2CPort extends EventTarget {
   }
   _slaveClosed(ev) {
     console.log("I2CPort._slaveClosed() portNumer=" + ev.portNumber + " address=" + ev.address);
-    // experimental。そもそも slavedeviceのcloseを考慮する必要があるのか?
-    // closeだけでなくdevice側のonready も検出できないと close後の openのタイミングが
-    // ないのでは? という問題はある。
-    // 一旦、現在はcloseだけ実装。
+    // experimental. Is it even necessary to handle slave device close?
+    // Unless onready on the device side can also be detected, there would be no timing
+    // for open after close — that is a known issue.
+    // For now, only close is implemented.
     //
-    // 呼びだし元インスタンスを消すのを防ぐためコンテキストを分ける
+    // separate context to prevent deleting the calling instance
     if (this.onclose != null) {
       this.onclose(ev);
     }
@@ -137,7 +137,7 @@ class I2CSlaveDevice extends EventTarget {
     this.portNumber = portNumber;
     this.address = address;
     this.conf = conf;
-    this.closeCallback = closeCallback; // I2CPort側のcallback。このインスタンスを時間差で消す
+    this.closeCallback = closeCallback; // callback on the I2CPort side. Deletes this instance with a delay
     this.isActive = false;
     this.onclose = null; // user callback on close
     this._reiniting = false;
@@ -154,7 +154,7 @@ class I2CSlaveDevice extends EventTarget {
       } else {
         if (result[0] == 1) {
           this.isActive = true;
-          let port = this.portNumber == 1 ? 0x80 & this.address : this.address; // i2c port が 0 or 1 の前提
+          let port = this.portNumber == 1 ? 0x80 & this.address : this.address; // assumes i2c port is 0 or 1
           this.conf.pipeline.registerAddrClose(this.conf.name, F.I2C_ONADDRCLOSE, this.portNumber, this.address, this._onClose.bind(this));
           resolve(this);
         } else {
@@ -169,14 +169,14 @@ class I2CSlaveDevice extends EventTarget {
     if (DEB) console.log("I2CSlaveDevice._onClose() port=" + this.portNumber + " address=" + this.address + " device=" + this.conf.name);
     this.isActive = false;
     const ev = new I2CCloseEvent("close", this.portNumber, this.address);
-    //    1度しか呼ばれないので、呼ぶ側で queue から登録消してしまえばよかろう。
+    //    Since this is only called once, it should be fine to remove the registration from the queue on the caller side.
     //    plmidi.removeAddrClose(this.conf.name,I2C_ONADDRCLOSE,this.portNumber,this.address);
     if (this.onclose != null) {
       this.onclose(ev);
     }
     this.dispatchEvent(ev);
     this.closeCallback(ev);
-    // USB reconnect 等でファームウェアが I2C アドレスをクローズした場合に自動再初期化する
+    // automatically re-initialize when firmware closes the I2C address (e.g. on USB reconnect)
     this._autoReinit();
   }
   async _autoReinit() {

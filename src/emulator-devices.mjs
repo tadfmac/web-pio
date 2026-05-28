@@ -2,9 +2,9 @@
 //
 // ©2025 by D.F.Mac. @TripArts Music
 //
-// エミュレータデバイスの管理クラス。
-// MIDIDevice / pomidi.mjs の代替として機能し、
-// emuViewer による画面表示と GPIO 状態管理を担う。
+// Management class for emulator devices.
+// Functions as a replacement for MIDIDevice / pomidi.mjs,
+// handling screen display via emuViewer and GPIO state management.
 //
 // Version:
 // - 2025.05.25 start writing
@@ -21,7 +21,7 @@ const c = devList.getConst();
 const DEB = false;
 
 // ---------------------------------------------------------------------------
-// EmulatorDevice — MIDIDevice 相当の単一デバイス抽象
+// EmulatorDevice — single device abstraction equivalent to MIDIDevice
 // ---------------------------------------------------------------------------
 
 class EmulatorDevice {
@@ -41,22 +41,22 @@ class EmulatorDevice {
     if (DEB) console.log("EmulatorDevice.init() name=" + name);
     this.name = name;
 
-    // DevConf は prefix (split by "-") で対応デバイスを検索する
+    // DevConf searches for a matching device by prefix (split by "-")
     const conf = new DevConf();
     this.conf = conf.init(name);
     if (!this.conf) {
       console.error("EmulatorDevice.init() unsupported device name=" + name);
       return null;
     }
-    // pipeline を emulator 用に差し替え
+    // replace pipeline with emulator-specific one
     this.conf.pipeline = pipelineEmu;
 
-    // emuViewer の deviceName は SUPPORTED_DEVICES のキーである prefix を使用
+    // emuViewer's deviceName uses the prefix, which is the key in SUPPORTED_DEVICES
     const prefix = name.split("-")[0];
     this.viewer = new emuViewer(dom, prefix);
     await this.viewer.init();
 
-    // pipeline に viewer を登録（GPIO変化コールバックも内部で設定される）
+    // register viewer with pipeline (GPIO change callback is also configured internally)
     pipelineEmu.registerViewer(name, this.viewer);
 
     this.gpioAccess = new GPIOAccess();
@@ -91,30 +91,30 @@ class EmulatorDevice {
 }
 
 // ---------------------------------------------------------------------------
-// EmulatorDevices — singleton。pomidi.mjs 相当のデバイスリスト管理
+// EmulatorDevices — singleton. Device list management equivalent to pomidi.mjs
 // ---------------------------------------------------------------------------
 
 class EmulatorDevices {
   constructor() {
     if (DEB) console.log("EmulatorDevices.constructor()");
     this.devices = {};        // name → EmulatorDevice
-    this.onChangeFunc = null; // Pio._onChangeEmuDevice へのコールバック
+    this.onChangeFunc = null; // callback to Pio._onChangeEmuDevice
   }
 
-  // Pio 側から呼び出す。デバイス追加・削除時に通知を受ける
+  // Called from the Pio side. Receives notification when a device is added or removed
   setOnChange(func) {
     if (DEB) console.log("EmulatorDevices.setOnChange()");
     this.onChangeFunc = func;
   }
 
-  // デバイスを追加する
-  // name   : デバイス名。prefix が supportedDevices に登録されていない場合はエラー
-  //          例: "pio_xiaoRP2040-emu1", "pio_RaspiPico-1"
-  // dom    : emuViewer を描画する DOM 要素
+  // Add a device
+  // name   : device name. Error if prefix is not registered in supportedDevices
+  //          e.g. "pio_xiaoRP2040-emu1", "pio_RaspiPico-1"
+  // dom    : DOM element in which emuViewer is rendered
   async addDevice(name, dom) {
     if (DEB) console.log("EmulatorDevices.addDevice() name=" + name);
 
-    // prefix を validate
+    // validate the prefix
     const prefix = name.split("-")[0];
     if (devList.find(prefix) === null) {
       console.error("EmulatorDevices.addDevice() unsupported device prefix=" + prefix + " (name=" + name + ")");
@@ -141,7 +141,7 @@ class EmulatorDevices {
     return device;
   }
 
-  // デバイスを削除する
+  // Remove a device
   removeDevice(name) {
     if (DEB) console.log("EmulatorDevices.removeDevice() name=" + name);
 
@@ -151,13 +151,13 @@ class EmulatorDevices {
     }
 
     const device = this.devices[name];
-    // viewer と pipeline の後始末を先に行う
+    // clean up viewer and pipeline first
     if (device.viewer) {
       device.viewer.destroy();
     }
     pipelineEmu.unregisterViewer(name);
-    // Pio と連携している場合は _onChangeEmuDevice 内で suspend() を呼ぶ（MIDI パスと対称）
-    // 連携していない場合はここで直接 suspend() する
+    // If linked with Pio, suspend() is called inside _onChangeEmuDevice (symmetric with MIDI path)
+    // If not linked, suspend() is called directly here
     delete this.devices[name];
 
     if (this.onChangeFunc) {
@@ -167,7 +167,7 @@ class EmulatorDevices {
     }
   }
 
-  // 現在管理中の EmulatorDevice 一覧を返す
+  // Returns the list of currently managed EmulatorDevices
   getDeviceList() {
     return Object.values(this.devices);
   }

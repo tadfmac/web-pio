@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
@@ -176,7 +176,7 @@ let qrPort = null;
 let qrDriver = null;
 let qrTimeout = null;
 
-import Pio from "../libs/pio.mjs";
+import Pio from "../src/pio.mjs";
 let pio = new Pio();
 pio.setOnFound(onFound);
 pio.setOnLeave(onLeave);

@@ -2,7 +2,7 @@
 // ssd1315.mjs
 // ©2025-2026 by D.F.Mac. @TripArts Music
 
-import Pio from "../../../libs/pio.mjs";
+import Pio from "../../../dist/pio.min.mjs";
 import OledDisplay from "../../../deps/tmp/grove-oled-display.js";
 
 let pio = new Pio();
