@@ -1,0 +1,8 @@
+apds9930
+as7341
+chirimen
+drv2605l
+hello-world
+sgp30
+sths34pf80
+tmp117
