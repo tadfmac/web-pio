@@ -1,0 +1,9 @@
+apds9930
+as7341
+drv2605l
+drv8830
+hello-world
+sgp30
+sths34pf80
+tca9548a
+tmp117
